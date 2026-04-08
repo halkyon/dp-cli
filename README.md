@@ -15,23 +15,30 @@ make build
 
 ## Configuration
 
-```bash
-export DATAPACKET_API_KEY="your-api-key"
-```
+The API key is loaded in the following order of priority:
 
-Tip: put a space in front of `export ...` to ensure it doesn't get written to your shell history!
+1. `DATAPACKET_API_KEY` environment variable
+2. `~/.config/dp/credentials` config file
+
+Example config file:
+
+```ini
+api_key = your-api-key
+```
 
 ## Commands
 
 ### show - Show server info
 
 ```bash
-# List all servers
+# List all servers (sorted by price)
 dp show
 
 # Filter by regex (matches name or alias)
 dp show "dp-prod-edge-mia-.+"
 ```
+
+Output includes: name, alias, IP address, price, currency, status, power status, and operating system.
 
 ### ssh - SSH to server
 

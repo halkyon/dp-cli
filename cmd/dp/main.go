@@ -11,6 +11,7 @@ import (
 
 	"dp/internal/api"
 	"dp/internal/completion"
+	"dp/internal/config"
 	"dp/internal/server"
 	"dp/internal/ssh"
 )
@@ -102,7 +103,10 @@ func runShow(ctx context.Context) error {
 		}
 	}
 
-	apiKey := os.Getenv("DATAPACKET_API_KEY")
+	apiKey, err := config.GetAPIKey()
+	if err != nil {
+		return err
+	}
 	if apiKey == "" {
 		return api.ErrMissingAPIKey
 	}

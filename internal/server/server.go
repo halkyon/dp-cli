@@ -145,8 +145,8 @@ const serversQuery = `query($input: PaginatedServersInput) {
 }`
 
 func filterResults(servers []Server, filterArg string) []Server {
-	nameRegex := regexp.MustCompile(filterArg)
-	aliasRegex := regexp.MustCompile(filterArg)
+	nameRegex := regexp.MustCompile("(?i)" + filterArg)
+	aliasRegex := regexp.MustCompile("(?i)" + filterArg)
 
 	filtered := make([]Server, 0, len(servers))
 

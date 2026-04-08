@@ -3,10 +3,10 @@ package completion
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"dp/internal/aliases"
 	"dp/internal/api"
+	"dp/internal/config"
 )
 
 type Shell string
@@ -33,7 +33,10 @@ func Generate(shell Shell) error {
 }
 
 func ListAliases(ctx context.Context) error {
-	apiKey := os.Getenv("DATAPACKET_API_KEY")
+	apiKey, err := config.GetAPIKey()
+	if err != nil {
+		return err
+	}
 	if apiKey == "" {
 		return api.ErrMissingAPIKey
 	}

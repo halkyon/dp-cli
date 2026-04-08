@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"dp/internal/api"
+	"dp/internal/config"
 	"dp/internal/server"
 )
 
@@ -26,7 +27,10 @@ func Run(ctx context.Context, args []string) error {
 		alias = parts[1]
 	}
 
-	apiKey := os.Getenv("DATAPACKET_API_KEY")
+	apiKey, err := config.GetAPIKey()
+	if err != nil {
+		return err
+	}
 	if apiKey == "" {
 		return api.ErrMissingAPIKey
 	}
