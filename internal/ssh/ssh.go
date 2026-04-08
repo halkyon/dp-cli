@@ -43,14 +43,14 @@ func Run(ctx context.Context, args []string) error {
 
 	var target *server.Server
 	for i := range servers {
-		if strings.EqualFold(servers[i].Alias, alias) {
+		if strings.EqualFold(servers[i].Alias, alias) || strings.EqualFold(servers[i].Name, alias) {
 			target = &servers[i]
 			break
 		}
 	}
 
 	if target == nil {
-		return fmt.Errorf("no server found with alias %q", alias)
+		return fmt.Errorf("no server found with alias or name %q", alias)
 	}
 
 	if target.IP == "" {

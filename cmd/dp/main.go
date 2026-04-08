@@ -37,8 +37,14 @@ func run(ctx context.Context) error {
 	case "show":
 		return runShow(ctx)
 	case "ssh":
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: dp ssh <alias> [ssh flags...]")
+		}
 		return ssh.Run(ctx, os.Args[2:])
 	case "completion":
+		if len(os.Args) < 3 {
+			return fmt.Errorf("usage: dp completion <bash|zsh|fish>")
+		}
 		return completion.Generate(completion.Shell(os.Args[2]))
 	case "aliases":
 		return completion.ListAliases(ctx)
