@@ -43,6 +43,12 @@ dp ssh "dp-prod-edge-mia1-11"
 dp ssh "root@dp-prod-edge-mia1-11"
 ```
 
+### aliases - List all server aliases
+
+```bash
+dp aliases
+```
+
 ## Shell completion setup
 
 After sourcing the completion script (see below), tab completion will work for:
