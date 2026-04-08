@@ -7,7 +7,7 @@ CLI tool for interacting with DataPacket's GraphQL API to list and SSH into serv
 - Go 1.25+
 - DataPacket readonly API key (generate this at https://app.datapacket.com/settings/security)
 
-## Building
+## Installation
 
 Download a pre-built binary from [releases](https://github.com/halkyon/dp-cli/releases) or build from source:
 
