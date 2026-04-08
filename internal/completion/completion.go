@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"dp/internal/aliases"
 	"dp/internal/api"
-	"dp/internal/server"
 )
 
 type Shell string
@@ -43,15 +43,14 @@ func ListAliases(ctx context.Context) error {
 		return err
 	}
 
-	servers, err := server.FetchAll(ctx, client)
+	cache := aliases.New(client)
+	list, err := cache.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, srv := range servers {
-		if srv.Alias != "" {
-			fmt.Println(srv.Alias)
-		}
+	for _, alias := range list {
+		fmt.Println(alias)
 	}
 
 	return nil
