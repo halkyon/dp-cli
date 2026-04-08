@@ -4,7 +4,7 @@ CLI tool for interacting with DataPacket's GraphQL API to list and SSH into serv
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.25+
 - DataPacket readonly API key (generate this at https://app.datapacket.com/settings/security)
 
 ## Building
@@ -32,8 +32,6 @@ dp show
 # Filter by regex (matches name or alias)
 dp show "dp-prod-edge-mia-.+"
 ```
-
-Output includes: name, alias, IP address, price, currency, status, and power status.
 
 ### ssh - SSH to server
 
