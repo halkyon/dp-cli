@@ -15,6 +15,8 @@ import (
 	"dp/internal/ssh"
 )
 
+var version = ""
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -62,6 +64,9 @@ func printUsage() {
 }
 
 func getVersion() string {
+	if version != "" {
+		return version
+	}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "unknown"
