@@ -1,0 +1,23 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - unparam
+    - gocritic
+    - unconvert
+    - maintidx
+    - modernize
+
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - exitAfterDefer
+
+issues:
+  exclude-use-default: false
