@@ -17,6 +17,8 @@ import (
 )
 
 var version = ""
+var verbose = false
+var sshUser = ""
 
 func main() {
 	if len(os.Args) < 2 {
@@ -24,9 +26,33 @@ func main() {
 		os.Exit(1)
 	}
 
+	parseFlags()
+
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
+	}
+}
+
+func parseFlags() {
+	for i := 1; i < len(os.Args); i++ {
+		switch os.Args[i] {
+		case "--verbose", "-v":
+			verbose = true
+			os.Args = append(os.Args[:i], os.Args[i+1:]...)
+			i--
+		case "--user", "-u":
+			if i+1 >= len(os.Args) {
+				fmt.Fprintln(os.Stderr, "error: --user requires a value")
+				os.Exit(1)
+			}
+			sshUser = os.Args[i+1]
+			os.Args = append(os.Args[:i], os.Args[i+2:]...)
+			i--
+		case "--help", "-h":
+			printUsage()
+			os.Exit(0)
+		}
 	}
 }
 
@@ -49,10 +75,7 @@ func run() error {
 		return completion.Generate(completion.Shell(os.Args[2]))
 	case "aliases":
 		return completion.ListAliases(ctx)
-	case "version":
-		fmt.Println(getVersion())
-		return nil
-	case "-v", "--version":
+	case "version", "-V", "--version":
 		fmt.Println(getVersion())
 		return nil
 	default:
@@ -61,7 +84,10 @@ func run() error {
 }
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s <command> [options]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Usage: %s [options] <command> [options]\n", os.Args[0])
+	fmt.Fprintf(os.Stderr, "Options:\n")
+	fmt.Fprintf(os.Stderr, "  -v, --verbose      Print verbose information\n")
+	fmt.Fprintf(os.Stderr, "  -u, --user <user>  SSH user (for ssh command)\n")
 	fmt.Fprintf(os.Stderr, "Commands:\n")
 	fmt.Fprintf(os.Stderr, "  show [regex]       List servers (optional regex filter)\n")
 	fmt.Fprintf(os.Stderr, "  ssh <alias>        SSH to server (alias or user@alias) [ssh flags...]\n")
@@ -139,7 +165,7 @@ func runSSH(ctx context.Context, args []string) error {
 		return err
 	}
 
-	return ssh.Run(ctx, servers, args)
+	return ssh.Run(ctx, servers, sshUser, args, verbose)
 }
 
 func getClient() *api.Client {
