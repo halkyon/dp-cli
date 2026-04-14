@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	APIKey string
+	Output string
 }
 
 func getConfigPath() string {
@@ -35,6 +36,7 @@ func Load() (*Config, error) {
 	}
 
 	cfg.APIKey = data.Section("").Key("api_key").String()
+	cfg.Output = data.Section("").Key("output").String()
 
 	return &cfg, nil
 }
@@ -54,4 +56,12 @@ func GetAPIKey() (string, error) {
 	}
 
 	return cfg.APIKey, nil
+}
+
+func GetOutput() (string, error) {
+	cfg, err := Load()
+	if err != nil {
+		return "", err
+	}
+	return cfg.Output, nil
 }

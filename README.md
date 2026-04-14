@@ -20,12 +20,19 @@ make build
 The API key is loaded in the following order of priority:
 
 1. `DATAPACKET_API_KEY` environment variable
-2. `~/.config/dp/credentials` config file
+2. `api_key` in config file
+
+The output format is loaded in the following order of priority:
+
+1. `-o` / `--output` flag
+2. `output` in config file
+3. default `json`
 
 Example config file:
 
 ```ini
 api_key = your-api-key
+output = table
 ```
 
 ## Commands
@@ -35,6 +42,18 @@ api_key = your-api-key
 ```bash
 # List all servers (sorted by price)
 dp show
+
+# Output formats: json (default), table, csv
+dp -o table show
+dp -o csv show
+
+# Combine with filters (flags work before or after command)
+dp -o csv show --alias=dp-select-storage-slo-4
+dp -o table show --location=London
+
+# Show wide table/csv with more fields
+dp -o table -ow show
+dp -o csv --output-wide show
 
 # Filter by name (repeatable)
 dp show --name DP-12345 --name DP-67890
@@ -57,6 +76,9 @@ dp show --power ON
 # Filter by tag (repeatable)
 dp show --tag env=prod --tag team=backend
 
+# Output specific fields (comma-separated)
+dp show -q Name,Alias,IP
+
 # Fuzzy filter using jq
 dp show | jq '[.[] | select(.alias) | select(.alias | test("dp-prod-edge-fra01-[0-9]"))]'
 ```
@@ -72,6 +94,9 @@ dp ssh root@my-server
 
 # SSH with verbose output
 dp -v ssh my-server
+
+# SSH with specific user
+dp ssh --user=admin my-server
 ```
 
 ### aliases - List all server aliases
@@ -83,8 +108,28 @@ dp aliases
 ## Global Options
 
 ```bash
--v, --verbose      Print verbose information
--u, --user <user>  SSH user (for ssh command)
+-o, --output <format>  Output format: json, table, csv (default "json")
+    --output-wide      Show more fields in table/csv output
+-q, --query <fields>   Output specific field(s) (comma-separated)
+-v, --verbose          Print verbose information
+```
+
+**Note:** Flags can come before or after the command (e.g., `dp -o csv show --name=foo` or `dp show -o csv`).
+
+### ssh - SSH to server
+
+```bash
+# SSH using default user (based on OS)
+dp ssh my-server
+
+# SSH as different user
+dp ssh root@my-server
+
+# SSH with verbose output
+dp -v ssh my-server
+
+# SSH with specific user (flag after command)
+dp ssh --user=admin my-server
 ```
 
 ## Shell completion setup
