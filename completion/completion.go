@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"dp/internal/aliases"
-	"dp/internal/api"
-	"dp/internal/config"
+	"github.com/halkyon/dp/aliases"
+	"github.com/halkyon/dp/api"
+	"github.com/halkyon/dp/config"
 )
 
 type Shell string

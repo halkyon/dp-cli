@@ -7,12 +7,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"dp/internal/api"
-	"dp/internal/config"
-	"dp/internal/server"
+	"github.com/halkyon/dp/server"
 )
 
-func Run(ctx context.Context, args []string) error {
+func Run(ctx context.Context, servers []server.Server, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("usage: dp ssh <alias> [ssh flags...]")
 	}
@@ -25,24 +23,6 @@ func Run(ctx context.Context, args []string) error {
 		parts := strings.SplitN(arg, "@", 2)
 		user = parts[0]
 		alias = parts[1]
-	}
-
-	apiKey, err := config.GetAPIKey()
-	if err != nil {
-		return err
-	}
-	if apiKey == "" {
-		return api.ErrMissingAPIKey
-	}
-
-	client, err := api.NewClient(apiKey)
-	if err != nil {
-		return err
-	}
-
-	servers, err := server.FetchAll(ctx, client)
-	if err != nil {
-		return err
 	}
 
 	var target *server.Server

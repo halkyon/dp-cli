@@ -74,3 +74,68 @@ dp completion zsh > ~/.zsh/completions/_dp
 dp completion bash > /etc/bash_completion.d/dp
 ```
 
+## SDK usage
+
+The dp packages can be imported for programmatic access to the DataPacket API.
+
+### API client
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+
+    "github.com/halkyon/dp/api"
+    "github.com/halkyon/dp/config"
+    "github.com/halkyon/dp/server"
+)
+
+func main() {
+    ctx := context.Background()
+
+    apiKey, err := config.GetAPIKey()
+    if err != nil {
+        log.Fatal(err)
+    }
+    if apiKey == "" {
+        log.Fatal(api.ErrMissingAPIKey)
+    }
+
+    client, err := api.NewClient(apiKey)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    servers, err := server.FetchAll(ctx, client)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    for _, s := range servers {
+        fmt.Printf("%s (%s) - %s\n", s.Name, s.Alias, s.IP)
+    }
+}
+```
+
+### Filter servers
+
+```go
+import "github.com/halkyon/dp/server"
+
+servers := server.Filter(servers, server.Options{Filter: "prod-.*"})
+```
+
+### Cached aliases
+
+```go
+import (
+    "github.com/halkyon/dp/aliases"
+    "github.com/halkyon/dp/api"
+)
+
+cache := aliases.New(client)
+list, err := cache.Get(ctx)
+```

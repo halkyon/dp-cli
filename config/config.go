@@ -19,24 +19,24 @@ func getConfigPath() string {
 }
 
 func Load() (*Config, error) {
-	cfg := &Config{}
+	var cfg Config
 
 	path := getConfigPath()
 	if path == "" {
-		return cfg, nil
+		return &cfg, nil
 	}
 
 	data, err := ini.Load(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return cfg, nil
+			return &cfg, nil
 		}
 		return nil, err
 	}
 
 	cfg.APIKey = data.Section("").Key("api_key").String()
 
-	return cfg, nil
+	return &cfg, nil
 }
 
 func GetAPIKey() (string, error) {

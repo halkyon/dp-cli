@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"dp/internal/api"
-	"dp/internal/cache"
-	"dp/internal/server"
+	"github.com/halkyon/dp/api"
+	"github.com/halkyon/dp/cache"
+	"github.com/halkyon/dp/server"
 )
 
 type AliasCache struct {

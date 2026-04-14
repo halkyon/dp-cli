@@ -9,11 +9,11 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"dp/internal/api"
-	"dp/internal/completion"
-	"dp/internal/config"
-	"dp/internal/server"
-	"dp/internal/ssh"
+	"github.com/halkyon/dp/api"
+	"github.com/halkyon/dp/completion"
+	"github.com/halkyon/dp/config"
+	"github.com/halkyon/dp/server"
+	"github.com/halkyon/dp/ssh"
 )
 
 var version = ""
@@ -24,16 +24,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-
-	if err := run(ctx); err != nil {
-		stop()
+	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context) error {
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	switch os.Args[1] {
 	case "show":
 		return runShow(ctx)
@@ -41,7 +41,7 @@ func run(ctx context.Context) error {
 		if len(os.Args) < 3 {
 			return fmt.Errorf("usage: dp ssh <alias> [ssh flags...]")
 		}
-		return ssh.Run(ctx, os.Args[2:])
+		return runSSH(ctx, os.Args[2:])
 	case "completion":
 		if len(os.Args) < 3 {
 			return fmt.Errorf("usage: dp completion <bash|zsh|fish>")
@@ -95,7 +95,7 @@ func getVersion() string {
 }
 
 func runShow(ctx context.Context) error {
-	opts := server.Options{}
+	var opts server.Options
 
 	for i := 2; i < len(os.Args); i++ {
 		if !strings.HasPrefix(os.Args[i], "-") {
@@ -131,4 +131,19 @@ func runShow(ctx context.Context) error {
 	fmt.Println(string(output))
 
 	return nil
+}
+
+func runSSH(ctx context.Context, args []string) error {
+	servers, err := server.FetchAll(ctx, getClient())
+	if err != nil {
+		return err
+	}
+
+	return ssh.Run(ctx, servers, args)
+}
+
+func getClient() *api.Client {
+	apiKey, _ := config.GetAPIKey()
+	client, _ := api.NewClient(apiKey)
+	return client
 }

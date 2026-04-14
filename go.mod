@@ -1,4 +1,4 @@
-module dp
+module github.com/halkyon/dp
 
 go 1.25
 

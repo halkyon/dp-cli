@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"dp/internal/api"
+	"github.com/halkyon/dp/api"
 )
 
 type Server struct {
