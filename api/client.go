@@ -19,6 +19,7 @@ var (
 type Client struct {
 	httpClient *http.Client
 	apiKey     string
+	baseURL    string
 }
 
 func NewClient(apiKey string) (*Client, error) {
@@ -28,7 +29,12 @@ func NewClient(apiKey string) (*Client, error) {
 	return &Client{
 		httpClient: &http.Client{},
 		apiKey:     apiKey,
+		baseURL:    "https://api.datapacket.com/v0/graphql",
 	}, nil
+}
+
+func (c *Client) SetBaseURL(url string) {
+	c.baseURL = url
 }
 
 func (c *Client) Query(ctx context.Context, query string, variables map[string]any, result any) error {
@@ -43,7 +49,7 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		"https://api.datapacket.com/v0/graphql",
+		c.baseURL,
 		bytes.NewReader(bodyBytes),
 	)
 	if err != nil {
