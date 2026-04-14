@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -64,7 +63,7 @@ func TestServer_List(t *testing.T) {
 	client.SetBaseURL(server.URL)
 
 	t.Run("List servers", func(t *testing.T) {
-		servers, err := List(context.Background(), client)
+		servers, err := List(t.Context(), client)
 		assert.NoError(t, err)
 		assert.Len(t, servers, 1)
 		assert.Equal(t, "DP-12345", servers[0].Name)

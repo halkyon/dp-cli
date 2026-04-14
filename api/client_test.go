@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +40,7 @@ func TestClient_Query(t *testing.T) {
 		client.SetBaseURL(server.URL)
 
 		var result map[string]any
-		require.NoError(t, client.Query(context.Background(), "query { test }", nil, &result))
+		require.NoError(t, client.Query(t.Context(), "query { test }", nil, &result))
 		assert.Equal(t, expectedData, result["test"])
 	})
 
@@ -61,7 +60,7 @@ func TestClient_Query(t *testing.T) {
 		client.SetBaseURL(server.URL)
 
 		var result map[string]any
-		require.ErrorContains(t, client.Query(context.Background(), "query { test }", nil, &result), "something went wrong")
+		require.ErrorContains(t, client.Query(t.Context(), "query { test }", nil, &result), "something went wrong")
 	})
 
 	t.Run("Missing API Key", func(t *testing.T) {

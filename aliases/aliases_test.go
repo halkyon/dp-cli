@@ -1,7 +1,6 @@
 package aliases
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -39,13 +38,13 @@ func TestAliasCache_Get(t *testing.T) {
 	cache := New(client)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
-		aliases, err := cache.Get(context.Background())
+		aliases, err := cache.Get(t.Context())
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
 	})
 
 	t.Run("Second call (cache hit)", func(t *testing.T) {
-		aliases, err := cache.Get(context.Background())
+		aliases, err := cache.Get(t.Context())
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
 	})
@@ -53,7 +52,7 @@ func TestAliasCache_Get(t *testing.T) {
 	t.Run("Clear cache", func(t *testing.T) {
 		require.NoError(t, cache.Clear())
 
-		aliases, err := cache.Get(context.Background())
+		aliases, err := cache.Get(t.Context())
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
 	})
