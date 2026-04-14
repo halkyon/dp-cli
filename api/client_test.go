@@ -21,7 +21,8 @@ type mockResponse struct {
 func TestClient_Query(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		expectedData := map[string]any{"test": "value"}
-		dataBytes, _ := json.Marshal(map[string]any{"test": expectedData})
+		dataBytes, err := json.Marshal(map[string]any{"test": expectedData})
+		require.NoError(t, err)
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, http.MethodPost, r.Method)
@@ -31,18 +32,16 @@ func TestClient_Query(t *testing.T) {
 			resp := mockResponse{
 				Data: dataBytes,
 			}
-			err := json.NewEncoder(w).Encode(resp)
-			require.NoError(t, err)
+			require.NoError(t, json.NewEncoder(w).Encode(resp))
 		}))
 		defer server.Close()
 
-		client, _ := NewClient("test-key")
+		client, err := NewClient("test-key")
+		require.NoError(t, err)
 		client.SetBaseURL(server.URL)
 
 		var result map[string]any
-		err := client.Query(context.Background(), "query { test }", nil, &result)
-
-		require.NoError(t, err)
+		require.NoError(t, client.Query(context.Background(), "query { test }", nil, &result))
 		assert.Equal(t, expectedData, result["test"])
 	})
 
@@ -53,19 +52,16 @@ func TestClient_Query(t *testing.T) {
 					Message string `json:"message"`
 				}{{Message: "something went wrong"}},
 			}
-			err := json.NewEncoder(w).Encode(resp)
-			require.NoError(t, err)
+			require.NoError(t, json.NewEncoder(w).Encode(resp))
 		}))
 		defer server.Close()
 
-		client, _ := NewClient("test-key")
+		client, err := NewClient("test-key")
+		require.NoError(t, err)
 		client.SetBaseURL(server.URL)
 
 		var result map[string]any
-		err := client.Query(context.Background(), "query { test }", nil, &result)
-
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "something went wrong")
+		require.ErrorContains(t, client.Query(context.Background(), "query { test }", nil, &result), "something went wrong")
 	})
 
 	t.Run("Missing API Key", func(t *testing.T) {

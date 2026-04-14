@@ -46,5 +46,5 @@ func (a *AliasCache) Get(ctx context.Context) ([]string, error) {
 }
 
 func (a *AliasCache) Clear() error {
-	return os.Remove(cache.New[[]string]("aliases", time.Hour).Path)
+	return os.RemoveAll(cache.New[[]string]("aliases", time.Hour).Path)
 }
