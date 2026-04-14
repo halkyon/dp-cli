@@ -174,7 +174,7 @@ func getVersion() string {
 func filterByFields(servers []server.Server, fields []string) []server.Server {
 	fieldSet := make(map[string]bool)
 	for _, f := range fields {
-		fieldSet[f] = true
+		fieldSet[strings.ToLower(f)] = true
 	}
 
 	var filtered []server.Server
@@ -195,52 +195,69 @@ func filterServerFields(s server.Server, fields map[string]bool) server.Server {
 
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if fields[field.Name] {
+		if fields[strings.ToLower(field.Name)] {
 			val.Field(i).Set(reflect.ValueOf(s).Field(i))
 		}
 	}
 	return result
 }
 
-func printTable(servers []server.Server, wide bool) string {
+func printTable(servers []server.Server, wide bool, queryFields []string) string {
 	if len(servers) == 0 {
 		return "No servers found"
 	}
 
 	type col struct {
-		name  string
-		width int
+		name        string
+		displayName string
+		width       int
 	}
 
 	var cols []col
-	if wide {
-		cols = []col{{"NAME", 0}, {"ALIAS", 0}, {"STATUS", 0}, {"LOCATION", 0}, {"IP", 0}, {"OS", 0}, {"CPU", 0}, {"MEMORY", 0}, {"PRICE", 0}}
-	} else {
-		cols = []col{{"NAME", 0}, {"ALIAS", 0}, {"STATUS", 0}, {"LOCATION", 0}, {"IP", 0}}
+	switch {
+	case len(queryFields) > 0:
+		for _, f := range queryFields {
+			cols = append(cols, col{name: f, displayName: strings.ToUpper(f), width: 0})
+		}
+	case wide:
+		cols = []col{
+			{name: "Name", displayName: "NAME", width: 0},
+			{name: "Alias", displayName: "ALIAS", width: 0},
+			{name: "Status", displayName: "STATUS", width: 0},
+			{name: "Location", displayName: "LOCATION", width: 0},
+			{name: "IP", displayName: "IP", width: 0},
+			{name: "OS", displayName: "OS", width: 0},
+			{name: "CPU", displayName: "CPU", width: 0},
+			{name: "Memory", displayName: "MEMORY", width: 0},
+			{name: "Storage", displayName: "STORAGE", width: 0},
+			{name: "Price", displayName: "PRICE", width: 0},
+		}
+	default:
+		cols = []col{
+			{name: "Name", displayName: "NAME", width: 0},
+			{name: "Alias", displayName: "ALIAS", width: 0},
+			{name: "Status", displayName: "STATUS", width: 0},
+			{name: "Location", displayName: "LOCATION", width: 0},
+			{name: "IP", displayName: "IP", width: 0},
+		}
 	}
 
 	for _, s := range servers {
-		cols[0].width = max(cols[0].width, len(s.Name))
-		cols[1].width = max(cols[1].width, len(s.Alias))
-		cols[2].width = max(cols[2].width, len(s.Status))
-		cols[3].width = max(cols[3].width, len(s.Location))
-		cols[4].width = max(cols[4].width, len(s.IP))
-		if wide {
-			cols[5].width = max(cols[5].width, len(s.OperatingSystem))
-			cols[6].width = max(cols[6].width, len(s.CPU))
-			cols[7].width = max(cols[7].width, len(s.Memory))
-			cols[8].width = max(cols[8].width, len(fmt.Sprintf("%.2f", s.Price)))
+		for i, c := range cols {
+			val := getFieldValue(s, c.name)
+			cols[i].width = max(cols[i].width, len(val))
 		}
 	}
 
 	for i := range cols {
-		cols[i].width = max(cols[i].width, len(cols[i].name)) + 1
+		cols[i].width = max(cols[i].width, len(cols[i].displayName)) + 1
 	}
 
-	format := ""
+	var formatBuilder strings.Builder
 	for _, c := range cols {
-		format += fmt.Sprintf("%%-%ds", c.width)
+		fmt.Fprintf(&formatBuilder, "%%-%ds", c.width)
 	}
+	format := formatBuilder.String()
 	format += "\n"
 
 	toAny := func(s []string) []any {
@@ -255,48 +272,50 @@ func printTable(servers []server.Server, wide bool) string {
 
 	header := make([]string, len(cols))
 	for i, c := range cols {
-		header[i] = c.name
+		header[i] = c.displayName
 	}
-	b.WriteString(fmt.Sprintf(format, toAny(header)...))
+	fmt.Fprintf(&b, format, toAny(header)...)
 
 	dashes := make([]string, len(cols))
 	for i, c := range cols {
 		dashes[i] = strings.Repeat("-", c.width-1)
 	}
-	b.WriteString(fmt.Sprintf(format, toAny(dashes)...))
+	fmt.Fprintf(&b, format, toAny(dashes)...)
 
 	for _, s := range servers {
 		var values []string
-		values = append(values, s.Name, s.Alias, s.Status, s.Location, s.IP)
-		if wide {
-			values = append(values, s.OperatingSystem, s.CPU, s.Memory, fmt.Sprintf("%.2f", s.Price))
+		for _, c := range cols {
+			val := getFieldValue(s, c.name)
+			values = append(values, val)
 		}
-		b.WriteString(fmt.Sprintf(format, toAny(values)...))
+		fmt.Fprintf(&b, format, toAny(values)...)
 	}
 
 	return b.String()
 }
 
 func getFieldValue(s server.Server, field string) string {
-	switch field {
-	case "Name":
+	switch strings.ToLower(field) {
+	case "name":
 		return s.Name
-	case "Alias":
+	case "alias":
 		return s.Alias
-	case "Status":
+	case "status":
 		return s.Status
-	case "Location":
+	case "location":
 		return s.Location
-	case "IP":
+	case "ip":
 		return s.IP
-	case "OS":
+	case "os", "operatingsystem":
 		return s.OperatingSystem
-	case "CPU":
+	case "cpu":
 		return s.CPU
-	case "Memory":
+	case "memory":
 		return s.Memory
-	case "Price":
+	case "price":
 		return fmt.Sprintf("%.2f", s.Price)
+	case "storage":
+		return s.Storage
 	default:
 		return ""
 	}
@@ -308,7 +327,7 @@ func printCSV(w *csv.Writer, servers []server.Server, wide bool, queryFields []s
 	case len(queryFields) > 0:
 		fields = queryFields
 	case wide:
-		fields = []string{"Name", "Alias", "Status", "Location", "IP", "OS", "CPU", "Memory", "Price"}
+		fields = []string{"Name", "Alias", "Status", "Location", "IP", "OS", "CPU", "Memory", "Storage", "Price"}
 	default:
 		fields = []string{"Name", "Alias", "Status", "Location", "IP"}
 	}
@@ -366,13 +385,27 @@ func runShow(ctx context.Context, outputFormat string, outputWide bool, queryFie
 
 	switch outputFormat {
 	case "json":
-		output, err := json.MarshalIndent(servers, "", "  ")
+		var encoded []byte
+		var err error
+		if len(queryFields) > 0 {
+			output := make([]map[string]any, len(servers))
+			for i, s := range servers {
+				m := make(map[string]any)
+				for _, f := range queryFields {
+					m[f] = getFieldValue(s, f)
+				}
+				output[i] = m
+			}
+			encoded, err = json.MarshalIndent(output, "", "  ")
+		} else {
+			encoded, err = json.MarshalIndent(servers, "", "  ")
+		}
 		if err != nil {
 			return fmt.Errorf("marshaling JSON: %w", err)
 		}
-		fmt.Println(string(output))
+		fmt.Println(string(encoded))
 	case "table":
-		fmt.Println(printTable(servers, outputWide))
+		fmt.Println(printTable(servers, outputWide, queryFields))
 	case "csv":
 		w := csv.NewWriter(os.Stdout)
 		fmt.Println(printCSV(w, servers, outputWide, queryFields))
