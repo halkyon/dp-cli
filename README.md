@@ -1,4 +1,4 @@
-# dp-cli
+# dp
 
 CLI tool for interacting with DataPacket's GraphQL API to list and SSH into servers.
 
