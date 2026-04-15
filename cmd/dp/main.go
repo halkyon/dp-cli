@@ -139,7 +139,7 @@ func run(cmd string, args []string, opts server.Options) error {
 		}
 		return completion.Generate(completion.Shell(args[0]))
 	case "aliases":
-		return completion.ListAliases(ctx)
+		return runFilter(ctx, "aliases")
 	case "locations":
 		return runFilter(ctx, "locations")
 	case "regions":
@@ -447,12 +447,19 @@ func runFilter(ctx context.Context, filterType string) error {
 
 	var list []string
 
+	locationsCache := config.GetLocationsCache()
+	regionsCache := config.GetRegionsCache()
+	aliasesCache := config.GetAliasesCache()
+
 	switch filterType {
+	case "aliases":
+		cache := filters.NewAliases(client, aliasesCache)
+		list, err = cache.Get(ctx)
 	case "locations":
-		cache := filters.NewLocations(client)
+		cache := filters.NewLocations(client, locationsCache)
 		list, err = cache.Get(ctx)
 	case "regions":
-		cache := filters.NewRegions(client)
+		cache := filters.NewRegions(client, regionsCache)
 		list, err = cache.Get(ctx)
 	case "power":
 		cache := filters.NewPower()

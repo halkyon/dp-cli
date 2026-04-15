@@ -13,9 +13,9 @@ type Locations struct {
 	client *api.Client
 }
 
-func NewLocations(client *api.Client) *Locations {
+func NewLocations(client *api.Client, cacheDuration time.Duration) *Locations {
 	return &Locations{
-		cache:  cache.New[[]string]("locations", 7*24*time.Hour),
+		cache:  cache.New[[]string]("locations", cacheDuration),
 		client: client,
 	}
 }

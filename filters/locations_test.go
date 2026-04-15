@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/halkyon/dp/api"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +32,7 @@ func TestLocations_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	locs := NewLocations(client)
+	locs := NewLocations(client, time.Hour)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		locations, err := locs.Get(context.Background())
@@ -67,7 +68,7 @@ func TestRegions_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	regions := NewRegions(client)
+	regions := NewRegions(client, time.Hour)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		regionList, err := regions.Get(context.Background())

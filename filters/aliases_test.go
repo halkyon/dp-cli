@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/halkyon/dp/api"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ func TestAliases_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	cache := NewAliases(client)
+	cache := NewAliases(client, time.Hour)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		aliases, err := cache.Get(context.Background())

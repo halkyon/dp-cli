@@ -1,14 +1,9 @@
 package completion
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/halkyon/dp/api"
-	"github.com/halkyon/dp/config"
-	"github.com/halkyon/dp/filters"
 )
 
 type Shell string
@@ -42,33 +37,6 @@ func getBinaryName() string {
 		name = name[idx+1:]
 	}
 	return name
-}
-
-func ListAliases(ctx context.Context) error {
-	apiKey, err := config.GetAPIKey()
-	if err != nil {
-		return err
-	}
-	if apiKey == "" {
-		return api.ErrMissingAPIKey
-	}
-
-	client, err := api.NewClient(apiKey)
-	if err != nil {
-		return err
-	}
-
-	cache := filters.NewAliases(client)
-	list, err := cache.Get(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, alias := range list {
-		fmt.Println(alias)
-	}
-
-	return nil
 }
 
 func renderBashCompletion(name string) string {

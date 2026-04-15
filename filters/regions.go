@@ -14,9 +14,9 @@ type Regions struct {
 	client *api.Client
 }
 
-func NewRegions(client *api.Client) *Regions {
+func NewRegions(client *api.Client, cacheDuration time.Duration) *Regions {
 	return &Regions{
-		cache:  cache.New[[]string]("regions", time.Hour),
+		cache:  cache.New[[]string]("regions", cacheDuration),
 		client: client,
 	}
 }

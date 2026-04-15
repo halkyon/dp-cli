@@ -14,9 +14,9 @@ type Aliases struct {
 	client *api.Client
 }
 
-func NewAliases(client *api.Client) *Aliases {
+func NewAliases(client *api.Client, cacheDuration time.Duration) *Aliases {
 	return &Aliases{
-		cache:  cache.New[[]string]("aliases", time.Hour),
+		cache:  cache.New[[]string]("aliases", cacheDuration),
 		client: client,
 	}
 }

@@ -28,6 +28,16 @@ The output format is loaded in the following order of priority:
 2. `output` in config file
 3. default `json`
 
+Cache durations can be configured in the config file:
+
+```ini
+api_key = your-api-key
+output = table
+aliases_cache = 24h
+locations_cache = 168h
+regions_cache = 168h
+```
+
 Example config file:
 
 ```ini
@@ -99,12 +109,6 @@ dp -v ssh my-server
 dp ssh --user=admin my-server
 ```
 
-### aliases - List all server aliases
-
-```bash
-dp aliases
-```
-
 ## Global Options
 
 ```bash
@@ -135,7 +139,7 @@ dp ssh --user=admin my-server
 ## Shell completion setup
 
 After sourcing the completion script (see below), tab completion will work for:
-- Commands (show, ssh, completion, aliases)
+- Commands (show, ssh, completion)
 - Alias names when using `show` or `ssh`
 
 ### zsh
@@ -210,14 +214,3 @@ servers, err := server.List(ctx, client,
 )
 ```
 
-### Cached aliases
-
-```go
-import (
-    "github.com/halkyon/dp/aliases"
-    "github.com/halkyon/dp/api"
-)
-
-cache := aliases.New(client)
-list, err := cache.Get(ctx)
-```
