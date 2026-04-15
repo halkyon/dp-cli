@@ -90,8 +90,8 @@ dp show --power ON
 # Filter by tag (repeatable)
 dp show --tag env=prod --tag team=backend
 
-# Output specific fields (comma-separated)
-dp show -q Name,Alias,IP
+# Output specific fields
+dp show --query Name --query Alias --query IP
 
 # Fuzzy filter using jq
 dp show | jq '[.[] | select(.alias) | select(.alias | test("dp-prod-edge-fra01-[0-9]"))]'
@@ -118,7 +118,7 @@ dp ssh --user=admin my-server
 ```bash
 -o, --output <format>  Output format: json, table, csv (default "json")
     --output-wide      Show more fields in table/csv output
--q, --query <fields>   Output specific field(s) (comma-separated)
+-q, --query <fields>   Output specific field(s) (repeatable)
 -v, --verbose          Print verbose information
 ```
 
