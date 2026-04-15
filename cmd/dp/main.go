@@ -374,6 +374,9 @@ func getClient() (*api.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	if apiURL, err := config.GetAPIURL(); err == nil && apiURL != "" {
+		client.SetBaseURL(apiURL)
+	}
 	return client, nil
 }
 

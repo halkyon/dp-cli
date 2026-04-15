@@ -28,21 +28,15 @@ The output format is loaded in the following order of priority:
 2. `output` in config file
 3. default `json`
 
-Cache durations can be configured in the config file:
+Cache durations and API URL can be configured in the config file:
 
 ```ini
 api_key = your-api-key
 output = table
+api_url = https://api.example.com/graphql
 aliases_cache = 24h
 locations_cache = 168h
 regions_cache = 168h
-```
-
-Example config file:
-
-```ini
-api_key = your-api-key
-output = table
 ```
 
 ## Commands

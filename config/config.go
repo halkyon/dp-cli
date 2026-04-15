@@ -10,6 +10,7 @@ import (
 type Config struct {
 	APIKey         string
 	Output         string
+	APIURL         string
 	AliasesCache   time.Duration
 	LocationsCache time.Duration
 	RegionsCache   time.Duration
@@ -50,6 +51,7 @@ func Load() (*Config, error) {
 
 	cfg.APIKey = data.Section("").Key("api_key").String()
 	cfg.Output = data.Section("").Key("output").String()
+	cfg.APIURL = data.Section("").Key("api_url").String()
 
 	if aliases := data.Section("").Key("aliases_cache").String(); aliases != "" {
 		cfg.AliasesCache = parseDuration(aliases)
@@ -95,6 +97,14 @@ func GetOutput() (string, error) {
 		return "", err
 	}
 	return cfg.Output, nil
+}
+
+func GetAPIURL() (string, error) {
+	cfg, err := Load()
+	if err != nil {
+		return "", err
+	}
+	return cfg.APIURL, nil
 }
 
 func GetAliasesCache() time.Duration {
