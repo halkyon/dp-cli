@@ -90,7 +90,7 @@ dp show --power ON
 # Filter by tag (repeatable)
 dp show --tag env=prod --tag team=backend
 
-# Output specific fields
+# Output specific fields (repeatable)
 dp show --query Name --query Alias --query IP
 
 # Fuzzy filter using jq
