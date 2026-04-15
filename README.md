@@ -49,22 +49,6 @@ Example `~/.config/dp/credentials`:
 api_key = your-api-key
 ```
 
-```
-dp --test-api show
-```
-
-### test-api - Start mock API server for testing
-
-```bash
-# Start the test API server (listens on a random port)
-dp test-api
-```
-
-The test API provides mock data for development/testing:
-- Servers: 3 test servers (DP-12345, DP-67890, DP-11111)
-- Locations: Amsterdam, New York, Singapore, etc.
-- Aliases: test-server-1, test-server-2
-
 ## Commands
 
 ### show - List servers
