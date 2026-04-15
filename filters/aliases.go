@@ -1,8 +1,7 @@
-package aliases
+package filters
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/halkyon/dp/api"
@@ -10,19 +9,19 @@ import (
 	"github.com/halkyon/dp/server"
 )
 
-type AliasCache struct {
+type Aliases struct {
 	cache  *cache.Cache[[]string]
 	client *api.Client
 }
 
-func New(client *api.Client) *AliasCache {
-	return &AliasCache{
+func NewAliases(client *api.Client) *Aliases {
+	return &Aliases{
 		cache:  cache.New[[]string]("aliases", time.Hour),
 		client: client,
 	}
 }
 
-func (a *AliasCache) Get(ctx context.Context) ([]string, error) {
+func (a *Aliases) Get(ctx context.Context) ([]string, error) {
 	var aliases []string
 	if a.cache.Get(&aliases) {
 		return aliases, nil
@@ -43,8 +42,4 @@ func (a *AliasCache) Get(ctx context.Context) ([]string, error) {
 	a.cache.Set(aliases, 0)
 
 	return aliases, nil
-}
-
-func (a *AliasCache) Clear() error {
-	return os.RemoveAll(cache.New[[]string]("aliases", time.Hour).Path)
 }

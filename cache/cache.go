@@ -62,3 +62,7 @@ func (c *Cache[T]) Set(data T, duration time.Duration) {
 
 	_ = os.WriteFile(c.Path, contents, 0644)
 }
+
+func (c *Cache[T]) Clear() error {
+	return os.RemoveAll(c.Path)
+}

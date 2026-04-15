@@ -1,6 +1,7 @@
-package aliases
+package filters
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAliasCache_Get(t *testing.T) {
+func TestAliases_Get(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := map[string]any{
 			"data": map[string]any{
@@ -35,24 +36,16 @@ func TestAliasCache_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	cache := New(client)
+	cache := NewAliases(client)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
-		aliases, err := cache.Get(t.Context())
+		aliases, err := cache.Get(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
 	})
 
 	t.Run("Second call (cache hit)", func(t *testing.T) {
-		aliases, err := cache.Get(t.Context())
-		require.NoError(t, err)
-		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
-	})
-
-	t.Run("Clear cache", func(t *testing.T) {
-		require.NoError(t, cache.Clear())
-
-		aliases, err := cache.Get(t.Context())
+		aliases, err := cache.Get(context.Background())
 		require.NoError(t, err)
 		assert.Equal(t, []string{"Alias1", "Alias3"}, aliases)
 	})

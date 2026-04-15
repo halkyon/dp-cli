@@ -15,6 +15,7 @@ import (
 	"github.com/halkyon/dp/api"
 	"github.com/halkyon/dp/completion"
 	"github.com/halkyon/dp/config"
+	"github.com/halkyon/dp/filters"
 	"github.com/halkyon/dp/server"
 	"github.com/halkyon/dp/ssh"
 )
@@ -139,6 +140,14 @@ func run(cmd string, args []string, opts server.Options) error {
 		return completion.Generate(completion.Shell(args[0]))
 	case "aliases":
 		return completion.ListAliases(ctx)
+	case "locations":
+		return runFilter(ctx, "locations")
+	case "regions":
+		return runFilter(ctx, "regions")
+	case "power":
+		return runFilter(ctx, "power")
+	case "status":
+		return runFilter(ctx, "status")
 	case "version", "-V", "--version":
 		fmt.Println(getVersion())
 		return nil
@@ -428,4 +437,40 @@ func runSSH(ctx context.Context, opts server.Options, sshUser string, args []str
 	}
 
 	return ssh.Run(ctx, servers, sshUser, args, verbose)
+}
+
+func runFilter(ctx context.Context, filterType string) error {
+	client, err := getClient()
+	if err != nil {
+		return err
+	}
+
+	var list []string
+
+	switch filterType {
+	case "locations":
+		cache := filters.NewLocations(client)
+		list, err = cache.Get(ctx)
+	case "regions":
+		cache := filters.NewRegions(client)
+		list, err = cache.Get(ctx)
+	case "power":
+		cache := filters.NewPower()
+		list, err = cache.Get(ctx)
+	case "status":
+		cache := filters.NewStatus()
+		list, err = cache.Get(ctx)
+	default:
+		return fmt.Errorf("unknown filter type: %s", filterType)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	for _, item := range list {
+		fmt.Println(item)
+	}
+
+	return nil
 }
