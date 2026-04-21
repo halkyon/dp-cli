@@ -281,4 +281,34 @@ regions_cache = 1h
 		_, err := Load(WithConfigDir(dir))
 		assert.Error(t, err)
 	})
+
+	t.Run("env var overrides credentials file for api_key", func(t *testing.T) {
+		dir := t.TempDir()
+
+		//nolint:gosec // test fixture
+		credContent := `api_key = file-key
+`
+		err := os.WriteFile(filepath.Join(dir, "credentials"), []byte(credContent), 0600)
+		require.NoError(t, err)
+
+		t.Setenv("DATAPACKET_API_KEY", "env-key")
+
+		cfg, err := Load(WithConfigDir(dir))
+		require.NoError(t, err)
+		assert.Equal(t, "env-key", cfg.APIKey)
+	})
+
+	t.Run("credentials file used when no env var", func(t *testing.T) {
+		dir := t.TempDir()
+
+		//nolint:gosec // test fixture
+		credContent := `api_key = file-key
+`
+		err := os.WriteFile(filepath.Join(dir, "credentials"), []byte(credContent), 0600)
+		require.NoError(t, err)
+
+		cfg, err := Load(WithConfigDir(dir))
+		require.NoError(t, err)
+		assert.Equal(t, "file-key", cfg.APIKey)
+	})
 }

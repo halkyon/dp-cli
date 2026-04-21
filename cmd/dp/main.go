@@ -431,10 +431,7 @@ func printCSV(w *csv.Writer, servers []server.Server, wide bool, queryFields []s
 }
 
 func getClient(ctx context.Context, cfg *config.Config) (*api.Client, error) {
-	apiKey := os.Getenv("DATAPACKET_API_KEY")
-	if apiKey == "" {
-		apiKey = cfg.APIKey
-	}
+	apiKey := cfg.APIKey
 	if apiKey == "" {
 		apiKey = "test-key"
 	}

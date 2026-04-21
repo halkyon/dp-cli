@@ -130,7 +130,8 @@ dp completion fish > ~/.config/fish/completions/dp.fish
 ## Global Options
 
 ```bash
---test-api   Use test API server
+--test-api             Use test API server
+-v, --verbose          Print verbose information
 ```
 
 ## Shell completion setup
@@ -173,15 +174,15 @@ import (
 func main() {
     ctx := context.Background()
 
-    apiKey, err := config.GetAPIKey()
+    cfg, err := config.Load()
     if err != nil {
         log.Fatal(err)
     }
-    if apiKey == "" {
+    if cfg.APIKey == "" {
         log.Fatal(api.ErrMissingAPIKey)
     }
 
-    client, err := api.NewClient(apiKey)
+    client, err := api.NewClient(cfg.APIKey)
     if err != nil {
         log.Fatal(err)
     }
@@ -210,4 +211,3 @@ servers, err := server.List(ctx, client,
     server.WithTag("env=prod", "team=backend"),
 )
 ```
-

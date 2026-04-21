@@ -128,6 +128,10 @@ func Load(opts ...ConfigOption) (*Config, error) {
 		}
 	}
 
+	if envAPIKey := os.Getenv("DATAPACKET_API_KEY"); envAPIKey != "" {
+		cfg.APIKey = envAPIKey
+	}
+
 	return cfg, nil
 }
 
