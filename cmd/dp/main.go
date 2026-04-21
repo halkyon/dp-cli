@@ -81,10 +81,9 @@ func main() {
 	flag.Usage = func() {
 		cmd := ""
 		args := os.Args[1:]
-		for i, a := range args {
+		for _, a := range args {
 			if !strings.HasPrefix(a, "-") {
 				cmd = a
-				args = args[i:]
 				break
 			}
 		}
@@ -183,9 +182,9 @@ func run(cmd string, args []string, opts server.Options) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-switch cmd {
-		case "servers":
-			return runShow(ctx, output, wide, *queryFields, opts)
+	switch cmd {
+	case "servers":
+		return runShow(ctx, output, wide, *queryFields, opts)
 	case "ssh":
 		var sshArgs []string
 		for _, arg := range args {
