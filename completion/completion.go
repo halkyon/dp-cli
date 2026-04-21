@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/template"
 )
 
 type Shell string
@@ -39,8 +40,7 @@ func getBinaryName() string {
 	return name
 }
 
-func renderBashCompletion(name string) string {
-	return `# bash completion for ` + name + `
+var bashCompletionTmpl = template.Must(template.New("bash").Parse(`# bash completion for {{.Name}}
 _dp() {
     local cur prev words cword
     _init_completion || return
@@ -74,7 +74,7 @@ _dp() {
         case "$prev_word" in
             --alias)
                 local -a aliases
-                if aliases=($(` + name + ` aliases 2>/dev/null)); then
+                if aliases=($({{.Name}} aliases 2>/dev/null)); then
                     local completion_word="$cur"
                     if [[ "$cur" == *@* ]]; then
                         completion_word="${cur#*@}"
@@ -84,39 +84,46 @@ _dp() {
                 ;;
             --location)
                 local -a locations
-                if locations=($(` + name + ` locations 2>/dev/null)); then
-                    COMPREPLY=($(compgen -W "${locations[*]}" -- "$cur"))
+                while IFS= read -r location; do
+                    locations+=("$location")
+                done < <({{.Name}} locations 2>/dev/null)
+                if [[ ${#locations[@]} -gt 0 ]]; then
+                    local match="$cur"
+                    match="${match#\"}"
+                    match="${match#\'}"
+                    for loc in "${locations[@]}"; do
+                        if [[ "$loc" == "$match"* ]]; then
+                            COMPREPLY+=("$loc")
+                        fi
+                    done
                 fi
                 ;;
             --region)
                 local -a regions
-                if regions=($(` + name + ` regions 2>/dev/null)); then
+                if regions=($({{.Name}} regions 2>/dev/null)); then
                     COMPREPLY=($(compgen -W "${regions[*]}" -- "$cur"))
                 fi
                 ;;
             --power)
                 local -a power_statuses
-                if power_statuses=($(` + name + ` power 2>/dev/null)); then
+                if power_statuses=($({{.Name}} power 2>/dev/null)); then
                     COMPREPLY=($(compgen -W "${power_statuses[*]}" -- "$cur"))
                 fi
                 ;;
             --status)
                 local -a server_statuses
-                if server_statuses=($(` + name + ` status 2>/dev/null)); then
+                if server_statuses=($({{.Name}} status 2>/dev/null)); then
                     COMPREPLY=($(compgen -W "${server_statuses[*]}" -- "$cur"))
                 fi
-                ;;
                 ;;
         esac
     fi
 }
 
-complete -F _dp ` + name + `
-`
-}
+complete -F _dp {{.Name}}
+`))
 
-func renderZshCompletion(name string) string {
-	return `# zsh completion for ` + name + `
+var zshCompletionTmpl = template.Must(template.New("zsh").Parse(`# zsh completion for {{.Name}}
 _dp() {
     local -a commands
     commands=(
@@ -151,7 +158,7 @@ _dp() {
         case "$prev_word" in
             --alias)
                 local -a aliases
-                aliases=($(` + name + ` aliases 2>/dev/null))
+                aliases=($({{.Name}} aliases 2>/dev/null))
                 if [[ "$cur_word" == *@* ]]; then
                     cur_word="${cur_word#*@}"
                 fi
@@ -160,27 +167,27 @@ _dp() {
                 ;;
             --location)
                 local -a locations
-                locations=($(` + name + ` locations 2>/dev/null))
+                locations=(${(f)"$({{.Name}} locations 2>/dev/null)"})
                 _describe "location" locations
                 ;;
             --region)
                 local -a regions
-                regions=($(` + name + ` regions 2>/dev/null))
+                regions=($({{.Name}} regions 2>/dev/null))
                 _describe "region" regions
                 ;;
             --power)
                 local -a power_statuses
-                power_statuses=($(` + name + ` power 2>/dev/null))
+                power_statuses=($({{.Name}} power 2>/dev/null))
                 _describe "power" power_statuses
                 ;;
             --status)
                 local -a server_statuses
-                server_statuses=($(` + name + ` status 2>/dev/null))
+                server_statuses=($({{.Name}} status 2>/dev/null))
                 _describe "status" server_statuses
                 ;;
             *)
                 local -a aliases
-                aliases=($(` + name + ` aliases 2>/dev/null))
+                aliases=($({{.Name}} aliases 2>/dev/null))
                 if [[ "$cur_word" == *@* ]]; then
                     cur_word="${cur_word#*@}"
                 fi
@@ -191,13 +198,11 @@ _dp() {
     fi
 }
 
-compdef _dp ` + name + `
-`
-}
+compdef _dp {{.Name}}
+`))
 
-func renderFishCompletion(name string) string {
-	return `# fish completion for ` + name + `
-function __fish_dp_needs_command
+var fishCompletionTmpl = template.Must(template.New("fish").Parse(`# fish completion for {{.Name}}
+function __fish_{{.Name}}_needs_command
     set -l cmd (commandline -opc)
     if test (count $cmd) -eq 1
         return 0
@@ -205,29 +210,29 @@ function __fish_dp_needs_command
     return 1
 end
 
-function __fish_dp_get_aliases
-    ` + name + ` aliases 2>/dev/null
+function __fish_{{.Name}}_get_aliases
+    {{.Name}} aliases 2>/dev/null
 end
 
-function __fish_dp_get_locations
-    ` + name + ` locations 2>/dev/null
+function __fish_{{.Name}}_get_locations
+    {{.Name}} locations 2>/dev/null
 end
 
-function __fish_dp_get_regions
-    ` + name + ` regions 2>/dev/null
+function __fish_{{.Name}}_get_regions
+    {{.Name}} regions 2>/dev/null
 end
 
-function __fish_dp_complete_alias
+function __fish_{{.Name}}_complete_alias
     set -l cmd (commandline -opc)
     set -l cur (commandline -ct)
     set -l word_to_complete "$cur"
     if string match -q '*@*' "$cur"
         set word_to_complete (string split '@' "$cur")[-1]
     end
-    __fish_dp_get_aliases | string match "$word_to_complete*"
+    __fish_{{.Name}}_get_aliases | string match "$word_to_complete*"
 end
 
-function __fish_dp_complete_filter
+function __fish_{{.Name}}_complete_filter
     set -l cmd (commandline -opc)
     set -l prev (commandline -op)
     set -l cur (commandline -ct)
@@ -263,28 +268,45 @@ function __fish_dp_complete_filter
 
     switch "$filter_type"
         case "alias"
-            __fish_dp_get_aliases | string match "$word_to_complete*"
+            __fish_{{.Name}}_get_aliases | string match "$word_to_complete*"
         case "location"
-            __fish_dp_get_locations | string match "$word_to_complete*"
+            __fish_{{.Name}}_get_locations | string match "$word_to_complete*"
         case "region"
-            __fish_dp_get_regions | string match "$word_to_complete*"
+            __fish_{{.Name}}_get_regions | string match "$word_to_complete*"
         case "power"
-            ` + name + ` power 2>/dev/null | string match "$word_to_complete*"
+            {{.Name}} power 2>/dev/null | string match "$word_to_complete*"
         case "status"
-            ` + name + ` status 2>/dev/null | string match "$word_to_complete*"
+            {{.Name}} status 2>/dev/null | string match "$word_to_complete*"
     end
 end
 
-complete -c ` + name + ` -f -n '__fish_dp_needs_command'
-complete -c ` + name + ` -a 'show' -d 'List servers with optional regex filter'
-complete -c ` + name + ` -a 'ssh' -d 'SSH to server by alias'
-complete -c ` + name + ` -a 'completion' -d 'Generate completion script'
-complete -c ` + name + ` -a 'aliases' -d 'List all server aliases'
-complete -c ` + name + ` -a 'locations' -d 'List all available locations'
-complete -c ` + name + ` -a 'regions' -d 'List all available regions'
-complete -c ` + name + ` -a 'power' -d 'List all power statuses'
-complete -c ` + name + ` -a 'status' -d 'List all server statuses'
-complete -c ` + name + ` -f -a '(__fish_dp_complete_alias)'
-complete -c ` + name + ` -f -a '(__fish_dp_complete_filter)'
-`
+complete -c {{.Name}} -f -n '__fish_{{.Name}}_needs_command'
+complete -c {{.Name}} -a 'show' -d 'List servers with optional regex filter'
+complete -c {{.Name}} -a 'ssh' -d 'SSH to server by alias'
+complete -c {{.Name}} -a 'completion' -d 'Generate completion script'
+complete -c {{.Name}} -a 'aliases' -d 'List all server aliases'
+complete -c {{.Name}} -a 'locations' -d 'List all available locations'
+complete -c {{.Name}} -a 'regions' -d 'List all available regions'
+complete -c {{.Name}} -a 'power' -d 'List all power statuses'
+complete -c {{.Name}} -a 'status' -d 'List all server statuses'
+complete -c {{.Name}} -f -a '(__fish_{{.Name}}_complete_alias)'
+complete -c {{.Name}} -f -a '(__fish_{{.Name}}_complete_filter)'
+`))
+
+func renderBashCompletion(name string) string {
+	var buf strings.Builder
+	bashCompletionTmpl.Execute(&buf, struct{ Name string }{Name: name})
+	return buf.String()
+}
+
+func renderZshCompletion(name string) string {
+	var buf strings.Builder
+	zshCompletionTmpl.Execute(&buf, struct{ Name string }{Name: name})
+	return buf.String()
+}
+
+func renderFishCompletion(name string) string {
+	var buf strings.Builder
+	fishCompletionTmpl.Execute(&buf, struct{ Name string }{Name: name})
+	return buf.String()
 }
