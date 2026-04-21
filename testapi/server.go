@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 )
+
+const defaultServerShutdownTimeout = 10 * time.Second
 
 type Server struct {
 	ln  net.Listener
@@ -17,7 +19,7 @@ type Server struct {
 }
 
 func NewServer() (*Server, error) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +27,11 @@ func NewServer() (*Server, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleGraphQL)
 
-	srv := &http.Server{Addr: ln.Addr().String(), Handler: mux}
+	srv := &http.Server{
+		Addr:              ln.Addr().String(),
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
 	return &Server{ln: ln, srv: srv}, nil
 }
@@ -41,7 +47,9 @@ func (s *Server) Run(ctx context.Context) error {
 	})
 	g.Go(func() error {
 		<-ctx.Done()
-		return s.srv.Shutdown(context.Background())
+		shutdownCtx, cancel := context.WithTimeout(ctx, defaultServerShutdownTimeout)
+		defer cancel()
+		return s.srv.Shutdown(shutdownCtx)
 	})
 	return g.Wait()
 }
@@ -51,26 +59,37 @@ func handleGraphQL(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		_ = json.NewEncoder(w).Encode(map[string]any{"errors": []map[string]string{{"message": err.Error()}}})
+		w.WriteHeader(http.StatusInternalServerError)
+		resp := map[string]any{"errors": []map[string]string{{"message": err.Error()}}}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
 		return
 	}
 
 	var req struct {
-		Query string `json:"query"`
+		Query     string         `json:"query"`
+		Variables map[string]any `json:"variables"`
 	}
 	if err := json.Unmarshal(body, &req); err != nil {
-		_ = json.NewEncoder(w).Encode(map[string]any{"errors": []map[string]string{{"message": err.Error()}}})
+		w.WriteHeader(http.StatusInternalServerError)
+		resp := map[string]any{"errors": []map[string]string{{"message": err.Error()}}}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	response := processQuery(req.Query)
-	_ = json.NewEncoder(w).Encode(response)
+	response := processQuery(req.Query, req.Variables)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+	}
 }
 
-func processQuery(query string) map[string]any {
+func processQuery(query string, variables map[string]any) map[string]any {
 	switch {
 	case contains(query, "servers"):
-		return map[string]any{"data": map[string]any{"servers": ServersResponse()}}
+		return map[string]any{"data": map[string]any{"servers": ServersResponse(variables)}}
 	case contains(query, "locations"):
 		return map[string]any{"data": map[string]any{"locations": LocationsResponse()}}
 	case contains(query, "regions"):
@@ -93,10 +112,16 @@ func containsAt(s, substr string, start int) bool {
 	return false
 }
 
-func ServersResponse() map[string]any {
+func ServersResponse(variables map[string]any) map[string]any {
 	servers, _, err := loadTestData()
 	if err != nil {
 		return map[string]any{"errors": []map[string]string{{"message": err.Error()}}}
+	}
+
+	if input, ok := variables["input"].(map[string]any); ok {
+		if filter, ok := input["filter"].(map[string]any); ok {
+			servers = filterServers(servers, filter)
+		}
 	}
 
 	entries := make([]map[string]any, len(servers))
@@ -153,6 +178,48 @@ func ServersResponse() map[string]any {
 	}
 }
 
+func filterServers(servers []serverEntry, filter map[string]any) []serverEntry {
+	var filtered []serverEntry
+
+	for _, s := range servers {
+		match := true
+
+		if nameIn, ok := filter["name_in"].([]any); ok {
+			match = match && containsAny(nameIn, s.Name)
+		}
+		if aliasIn, ok := filter["alias_in"].([]any); ok {
+			match = match && containsAny(aliasIn, s.Alias)
+		}
+		if locationIn, ok := filter["location_in"].([]any); ok {
+			match = match && containsAny(locationIn, s.Location.Name)
+		}
+		if regionIn, ok := filter["region_in"].([]any); ok {
+			match = match && containsAny(regionIn, s.Location.Region)
+		}
+		if statusIn, ok := filter["serverStatusV2_in"].([]any); ok {
+			match = match && containsAny(statusIn, s.StatusV2)
+		}
+		if powerIn, ok := filter["powerStatus_in"].([]any); ok {
+			match = match && containsAny(powerIn, s.PowerStatus)
+		}
+
+		if match {
+			filtered = append(filtered, s)
+		}
+	}
+
+	return filtered
+}
+
+func containsAny(list []any, value string) bool {
+	for _, v := range list {
+		if s, ok := v.(string); ok && s == value {
+			return true
+		}
+	}
+	return false
+}
+
 func LocationsResponse() []map[string]any {
 	_, locations, err := loadTestData()
 	if err != nil {
@@ -164,17 +231,4 @@ func LocationsResponse() []map[string]any {
 		result[i] = map[string]any{"name": loc.Name, "region": loc.Region}
 	}
 	return result
-}
-
-func Start(ctx context.Context) (*Server, error) {
-	srv, err := NewServer()
-	if err != nil {
-		return nil, err
-	}
-	go func() {
-		if err := srv.Run(ctx); err != nil {
-			log.Printf("testapi server error: %v", err)
-		}
-	}()
-	return srv, nil
 }

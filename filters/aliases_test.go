@@ -2,7 +2,6 @@ package filters
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -13,16 +12,21 @@ import (
 )
 
 func TestAliases_Get(t *testing.T) {
-	srv, err := testapi.Start(t.Context())
+	srv, err := testapi.NewServer()
 	require.NoError(t, err)
 
-	url := fmt.Sprintf("http://%s", srv.Addr())
+	go func() {
+		_ = srv.Run(t.Context())
+	}()
+
+	url := "http://" + srv.Addr()
 
 	client, err := api.NewClient("test-key")
 	require.NoError(t, err)
 	client.SetBaseURL(url)
 
-	cache := NewAliases(client, time.Hour)
+	cache, err := NewAliases(client, time.Hour, t.TempDir())
+	require.NoError(t, err)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		aliases, err := cache.Get(context.Background())

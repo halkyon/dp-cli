@@ -2,6 +2,7 @@ package ssh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,7 +13,7 @@ import (
 
 func Run(ctx context.Context, servers []server.Server, username string, args []string, verbose bool) error {
 	if len(args) < 1 {
-		return fmt.Errorf("usage: dp ssh <alias> [ssh flags...]")
+		return errors.New("usage: dp ssh <alias> [ssh flags...]")
 	}
 
 	alias := args[0]
@@ -56,7 +57,7 @@ func Run(ctx context.Context, servers []server.Server, username string, args []s
 	if verbose {
 		fmt.Fprintf(os.Stderr, "running: ssh %s\n", strings.Join(sshArgs, " "))
 	}
-	sshCmd := exec.Command("ssh", sshArgs...)
+	sshCmd := exec.CommandContext(ctx, "ssh", sshArgs...)
 	sshCmd.Stdin = os.Stdin
 	sshCmd.Stdout = os.Stdout
 	sshCmd.Stderr = os.Stderr

@@ -14,11 +14,15 @@ type Regions struct {
 	client *api.Client
 }
 
-func NewRegions(client *api.Client, cacheDuration time.Duration) *Regions {
-	return &Regions{
-		cache:  cache.New[[]string]("regions", cacheDuration),
-		client: client,
+func NewRegions(client *api.Client, cacheDuration time.Duration, cacheDir string) (*Regions, error) {
+	c, err := cache.New[[]string]("regions", cacheDuration, cacheDir)
+	if err != nil {
+		return nil, err
 	}
+	return &Regions{
+		cache:  c,
+		client: client,
+	}, nil
 }
 
 func (r *Regions) Get(ctx context.Context) ([]string, error) {
@@ -43,7 +47,9 @@ func (r *Regions) Get(ctx context.Context) ([]string, error) {
 	}
 	sort.Strings(regions)
 
-	r.cache.Set(regions, 0)
+	if err := r.cache.Set(regions, 0); err != nil {
+		return nil, err
+	}
 	return regions, nil
 }
 

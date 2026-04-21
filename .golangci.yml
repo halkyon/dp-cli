@@ -1,13 +1,71 @@
 version: "2"
+
 linters:
   enable:
+    - asasalint
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - dogsled
+    - durationcheck
+    - err113
     - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exptostd
+    - fatcontext
+    - gocheckcompilerdirectives
+    - goprintffuncname
     - govet
+    - grouper
     - staticcheck
     - unused
     - ineffassign
+    - importas
     - unparam
     - gocritic
+    - gosec
     - unconvert
+    - loggercheck
     - maintidx
+    - makezero
+    - mirror
+    - misspell
     - modernize
+    - nakedret
+    - nilerr
+    - nilnesserr
+    - noctx
+    - nosprintfhostport
+    - perfsprint
+    - predeclared
+    - reassign
+    - sqlclosecheck
+    - testifylint
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+  exclusions:
+    rules:
+      - linters:
+          - err113
+        text: do not define dynamic errors
+      - linters:
+          - gosec
+        text: G703
+      - linters:
+          - gosec
+        text: G204
+      - linters:
+          - contextcheck
+        text: Function `New.*` should pass the context parameter
+      - linters:
+          - contextcheck
+        text: Non-inherited new context
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -133,12 +134,12 @@ func run(cmd string, args []string, opts server.Options) error {
 			sshArgs = append(sshArgs, arg)
 		}
 		if len(sshArgs) < 1 {
-			return fmt.Errorf("usage: dp ssh <alias> [ssh flags...]")
+			return errors.New("usage: dp ssh <alias> [ssh flags...]")
 		}
 		return runSSH(ctx, opts, sshUser, sshArgs, verbose)
 	case "completion":
 		if len(args) < 1 {
-			return fmt.Errorf("usage: dp completion <bash|zsh|fish>")
+			return errors.New("usage: dp completion <bash|zsh|fish>")
 		}
 		return completion.Generate(completion.Shell(args[0]))
 	case "aliases":
@@ -378,11 +379,14 @@ func getClient(ctx context.Context) (*api.Client, error) {
 		return nil, err
 	}
 	if flagTestAPI || config.GetTestAPI() {
-		srv, err := testapi.Start(ctx)
+		srv, err := testapi.NewServer()
 		if err != nil {
 			return nil, err
 		}
-		url := fmt.Sprintf("http://%s", srv.Addr())
+		go func() {
+			_ = srv.Run(ctx)
+		}()
+		url := "http://" + srv.Addr()
 		client.SetBaseURL(url)
 	} else if apiURL, err := config.GetAPIURL(); err == nil && apiURL != "" {
 		client.SetBaseURL(apiURL)
@@ -458,32 +462,38 @@ func runFilter(ctx context.Context, filterType string) error {
 		return err
 	}
 
-	var list []string
-
-	locationsCache := config.GetLocationsCache()
-	regionsCache := config.GetRegionsCache()
-	aliasesCache := config.GetAliasesCache()
+	var filter interface {
+		Get(context.Context) ([]string, error)
+	}
 
 	switch filterType {
 	case "aliases":
-		cache := filters.NewAliases(client, aliasesCache)
-		list, err = cache.Get(ctx)
+		cache, err := filters.NewAliases(client, config.GetAliasesCache(), "")
+		if err != nil {
+			return err
+		}
+		filter = cache
 	case "locations":
-		cache := filters.NewLocations(client, locationsCache)
-		list, err = cache.Get(ctx)
+		cache, err := filters.NewLocations(client, config.GetLocationsCache(), "")
+		if err != nil {
+			return err
+		}
+		filter = cache
 	case "regions":
-		cache := filters.NewRegions(client, regionsCache)
-		list, err = cache.Get(ctx)
+		cache, err := filters.NewRegions(client, config.GetRegionsCache(), "")
+		if err != nil {
+			return err
+		}
+		filter = cache
 	case "power":
-		cache := filters.NewPower()
-		list, err = cache.Get(ctx)
+		filter = filters.NewPower()
 	case "status":
-		cache := filters.NewStatus()
-		list, err = cache.Get(ctx)
+		filter = filters.NewStatus()
 	default:
 		return fmt.Errorf("unknown filter type: %s", filterType)
 	}
 
+	list, err := filter.Get(ctx)
 	if err != nil {
 		return err
 	}

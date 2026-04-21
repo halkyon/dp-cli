@@ -24,7 +24,7 @@ func TestLocations_Get(t *testing.T) {
 				},
 			},
 		}
-		require.NoError(t, json.NewEncoder(w).Encode(resp))
+		assert.NoError(t, json.NewEncoder(w).Encode(resp))
 	}))
 	defer server.Close()
 
@@ -32,7 +32,9 @@ func TestLocations_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	locs := NewLocations(client, time.Hour)
+	locs, err := NewLocations(client, time.Hour, t.TempDir())
+	require.NoError(t, err)
+	require.NoError(t, locs.Clear())
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		locations, err := locs.Get(context.Background())
@@ -60,7 +62,7 @@ func TestRegions_Get(t *testing.T) {
 				},
 			},
 		}
-		require.NoError(t, json.NewEncoder(w).Encode(resp))
+		assert.NoError(t, json.NewEncoder(w).Encode(resp))
 	}))
 	defer server.Close()
 
@@ -68,7 +70,8 @@ func TestRegions_Get(t *testing.T) {
 	require.NoError(t, err)
 	client.SetBaseURL(server.URL)
 
-	regions := NewRegions(client, time.Hour)
+	regions, err := NewRegions(client, time.Hour, t.TempDir())
+	require.NoError(t, err)
 
 	t.Run("First call (cache miss)", func(t *testing.T) {
 		regionList, err := regions.Get(context.Background())

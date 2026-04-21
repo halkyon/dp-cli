@@ -13,11 +13,15 @@ type Locations struct {
 	client *api.Client
 }
 
-func NewLocations(client *api.Client, cacheDuration time.Duration) *Locations {
-	return &Locations{
-		cache:  cache.New[[]string]("locations", cacheDuration),
-		client: client,
+func NewLocations(client *api.Client, cacheDuration time.Duration, cacheDir string) (*Locations, error) {
+	c, err := cache.New[[]string]("locations", cacheDuration, cacheDir)
+	if err != nil {
+		return nil, err
 	}
+	return &Locations{
+		cache:  c,
+		client: client,
+	}, nil
 }
 
 func (l *Locations) Get(ctx context.Context) ([]string, error) {
@@ -36,7 +40,9 @@ func (l *Locations) Get(ctx context.Context) ([]string, error) {
 		locations[i] = loc.Name
 	}
 
-	l.cache.Set(locations, 0)
+	if err := l.cache.Set(locations, 0); err != nil {
+		return nil, err
+	}
 	return locations, nil
 }
 

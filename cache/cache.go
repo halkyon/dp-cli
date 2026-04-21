@@ -19,14 +19,18 @@ type cacheFile[T any] struct {
 	Data     T             `json:"data"`
 }
 
-func New[T any](name string, maxAge time.Duration) *Cache[T] {
-	cacheDir := filepath.Join(os.Getenv("HOME"), ".cache", "dp")
-	_ = os.MkdirAll(cacheDir, 0755)
+func New[T any](name string, maxAge time.Duration, cacheDir string) (*Cache[T], error) {
+	if cacheDir == "" {
+		cacheDir = filepath.Join(os.Getenv("HOME"), ".cache", "dp")
+	}
+	if err := os.MkdirAll(cacheDir, 0750); err != nil {
+		return nil, err
+	}
 
 	return &Cache[T]{
 		Path:   filepath.Join(cacheDir, name+".json"),
 		MaxAge: maxAge,
-	}
+	}, nil
 }
 
 func (c *Cache[T]) Get(data *T) bool {
@@ -48,7 +52,7 @@ func (c *Cache[T]) Get(data *T) bool {
 	return true
 }
 
-func (c *Cache[T]) Set(data T, duration time.Duration) {
+func (c *Cache[T]) Set(data T, duration time.Duration) error {
 	cached := cacheFile[T]{
 		Expiry:   time.Now().Add(c.MaxAge),
 		Duration: duration,
@@ -57,10 +61,10 @@ func (c *Cache[T]) Set(data T, duration time.Duration) {
 
 	contents, err := json.Marshal(cached)
 	if err != nil {
-		return
+		return err
 	}
 
-	_ = os.WriteFile(c.Path, contents, 0644)
+	return os.WriteFile(c.Path, contents, 0600)
 }
 
 func (c *Cache[T]) Clear() error {

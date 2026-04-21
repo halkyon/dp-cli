@@ -14,11 +14,15 @@ type Aliases struct {
 	client *api.Client
 }
 
-func NewAliases(client *api.Client, cacheDuration time.Duration) *Aliases {
-	return &Aliases{
-		cache:  cache.New[[]string]("aliases", cacheDuration),
-		client: client,
+func NewAliases(client *api.Client, cacheDuration time.Duration, cacheDir string) (*Aliases, error) {
+	c, err := cache.New[[]string]("aliases", cacheDuration, cacheDir)
+	if err != nil {
+		return nil, err
 	}
+	return &Aliases{
+		cache:  c,
+		client: client,
+	}, nil
 }
 
 func (a *Aliases) Get(ctx context.Context) ([]string, error) {
@@ -39,7 +43,9 @@ func (a *Aliases) Get(ctx context.Context) ([]string, error) {
 		}
 	}
 
-	a.cache.Set(aliases, 0)
+	if err := a.cache.Set(aliases, 0); err != nil {
+		return nil, err
+	}
 
 	return aliases, nil
 }

@@ -31,7 +31,7 @@ func TestClient_Query(t *testing.T) {
 			resp := mockResponse{
 				Data: dataBytes,
 			}
-			require.NoError(t, json.NewEncoder(w).Encode(resp))
+			assert.NoError(t, json.NewEncoder(w).Encode(resp))
 		}))
 		defer server.Close()
 
@@ -51,7 +51,7 @@ func TestClient_Query(t *testing.T) {
 					Message string `json:"message"`
 				}{{Message: "something went wrong"}},
 			}
-			require.NoError(t, json.NewEncoder(w).Encode(resp))
+			assert.NoError(t, json.NewEncoder(w).Encode(resp))
 		}))
 		defer server.Close()
 
