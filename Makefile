@@ -17,13 +17,13 @@ build: clean
 	@mkdir -p $(RELEASES_DIR)/$(GIT_SHA)
 
 	@echo "Building linux static..."
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_amd64 ./cmd/dp
+	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_amd64 ./cmd/dp
 
 	@echo "Building macOS amd64..."
-	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_darwin_amd64 ./cmd/dp
+	@GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_darwin_amd64 ./cmd/dp
 
 	@echo "Building macOS arm64..."
-	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_darwin_arm64 ./cmd/dp
+	@GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -trimpath -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(GIT_SHA)/dp_darwin_arm64 ./cmd/dp
 
 	@echo "Computing checksums..."
 	@cd $(RELEASES_DIR)/$(GIT_SHA) && sha256sum dp_* > sha256sums.txt
