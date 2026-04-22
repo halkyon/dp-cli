@@ -58,12 +58,6 @@ linters:
       - linters:
           - gosec
         text: G204
-      - linters:
-          - contextcheck
-        text: Function `New.*` should pass the context parameter
-      - linters:
-          - contextcheck
-        text: Non-inherited new context
 
 formatters:
   enable:
