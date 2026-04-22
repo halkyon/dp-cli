@@ -313,23 +313,22 @@ func printTable(servers []server.Server, wide bool, queryFields []string) string
 		}
 	}
 
-	for _, s := range servers {
+	rowValues := make([][]string, len(servers))
+	for si, s := range servers {
+		rowValues[si] = make([]string, len(cols))
 		for i, c := range cols {
 			val := getFieldValue(s, c.name)
+			rowValues[si][i] = val
 			cols[i].width = max(cols[i].width, len(val))
 		}
 	}
 
+	var formatBuilder strings.Builder
 	for i := range cols {
 		cols[i].width = max(cols[i].width, len(cols[i].displayName)) + 1
+		fmt.Fprintf(&formatBuilder, "%%-%ds", cols[i].width)
 	}
-
-	var formatBuilder strings.Builder
-	for _, c := range cols {
-		fmt.Fprintf(&formatBuilder, "%%-%ds", c.width)
-	}
-	format := formatBuilder.String()
-	format += "\n"
+	format := formatBuilder.String() + "\n"
 
 	toAny := func(s []string) []any {
 		result := make([]any, len(s))
@@ -342,24 +341,16 @@ func printTable(servers []server.Server, wide bool, queryFields []string) string
 	var b strings.Builder
 
 	header := make([]string, len(cols))
-	for i, c := range cols {
-		header[i] = c.displayName
-	}
-	fmt.Fprintf(&b, format, toAny(header)...)
-
 	dashes := make([]string, len(cols))
 	for i, c := range cols {
+		header[i] = c.displayName
 		dashes[i] = strings.Repeat("-", c.width-1)
 	}
+	fmt.Fprintf(&b, format, toAny(header)...)
 	fmt.Fprintf(&b, format, toAny(dashes)...)
 
-	for _, s := range servers {
-		var values []string
-		for _, c := range cols {
-			val := getFieldValue(s, c.name)
-			values = append(values, val)
-		}
-		fmt.Fprintf(&b, format, toAny(values)...)
+	for _, vals := range rowValues {
+		fmt.Fprintf(&b, format, toAny(vals)...)
 	}
 
 	return b.String()
