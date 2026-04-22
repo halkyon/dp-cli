@@ -12,7 +12,7 @@ var serversData []byte
 //go:embed testdata/locations.json
 var locationsData []byte
 
-type Entry struct {
+type entry struct {
 	Name        string `json:"name"`
 	Alias       string `json:"alias"`
 	Hostname    string `json:"hostname"`
@@ -98,12 +98,12 @@ type locationEntry struct {
 }
 
 type serversResponse struct {
-	Entries []Entry `json:"entries"`
+	Entries []entry `json:"entries"`
 }
 
 type locationsResponse []locationEntry
 
-func LoadTestData() ([]Entry, []locationEntry, error) {
+func loadTestData() ([]entry, []locationEntry, error) {
 	var servers serversResponse
 	if err := json.Unmarshal(serversData, &servers); err != nil {
 		return nil, nil, fmt.Errorf("unmarshaling servers: %w", err)

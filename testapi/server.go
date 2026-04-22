@@ -89,11 +89,11 @@ func handleGraphQL(w http.ResponseWriter, r *http.Request) {
 func processQuery(query string, variables map[string]any) map[string]any {
 	switch {
 	case contains(query, "servers"):
-		return map[string]any{"data": map[string]any{"servers": ServersResponse(variables)}}
+		return map[string]any{"data": map[string]any{"servers": queryServers(variables)}}
 	case contains(query, "locations"):
-		return map[string]any{"data": map[string]any{"locations": LocationsResponse()}}
+		return map[string]any{"data": map[string]any{"locations": queryLocations()}}
 	case contains(query, "regions"):
-		return map[string]any{"data": map[string]any{"locations": LocationsResponse()}}
+		return map[string]any{"data": map[string]any{"locations": queryLocations()}}
 	default:
 		return map[string]any{"errors": []map[string]string{{"message": "unknown query"}}}
 	}
@@ -112,15 +112,15 @@ func containsAt(s, substr string, start int) bool {
 	return false
 }
 
-func ServersResponse(variables map[string]any) map[string]any {
-	servers, _, err := LoadTestData()
+func queryServers(variables map[string]any) map[string]any {
+	servers, _, err := loadTestData()
 	if err != nil {
 		return map[string]any{"errors": []map[string]string{{"message": err.Error()}}}
 	}
 
 	if input, ok := variables["input"].(map[string]any); ok {
 		if filter, ok := input["filter"].(map[string]any); ok {
-			servers = FilterServers(servers, filter)
+			servers = filterServers(servers, filter)
 		}
 	}
 
@@ -178,8 +178,8 @@ func ServersResponse(variables map[string]any) map[string]any {
 	}
 }
 
-func FilterServers(servers []Entry, filter map[string]any) []Entry {
-	var filtered []Entry
+func filterServers(servers []entry, filter map[string]any) []entry {
+	var filtered []entry
 
 	for _, s := range servers {
 		match := true
@@ -220,8 +220,8 @@ func containsAny(list []any, value string) bool {
 	return false
 }
 
-func LocationsResponse() []map[string]any {
-	_, locations, err := LoadTestData()
+func queryLocations() []map[string]any {
+	_, locations, err := loadTestData()
 	if err != nil {
 		return nil
 	}

@@ -10,7 +10,7 @@ type MockQuerier struct{}
 
 func (m *MockQuerier) Query(ctx context.Context, query string, variables map[string]any, result any) error {
 	if strings.Contains(query, "locations") || strings.Contains(query, "regions") {
-		_, locations, err := LoadTestData()
+		_, locations, err := loadTestData()
 		if err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func (m *MockQuerier) Query(ctx context.Context, query string, variables map[str
 		return json.Unmarshal(gqlResp.Data, result)
 	}
 
-	servers, _, err := LoadTestData()
+	servers, _, err := loadTestData()
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (m *MockQuerier) Query(ctx context.Context, query string, variables map[str
 					convertedFilter[k] = v
 				}
 			}
-			servers = FilterServers(servers, convertedFilter)
+			servers = filterServers(servers, convertedFilter)
 		}
 	}
 
@@ -80,7 +80,7 @@ func (m *MockQuerier) Query(ctx context.Context, query string, variables map[str
 	return json.Unmarshal(gqlResp.Data, result)
 }
 
-func serversToGraphQLResponse(servers []Entry) map[string]any {
+func serversToGraphQLResponse(servers []entry) map[string]any {
 	entries := make([]map[string]any, len(servers))
 	for i, s := range servers {
 		var tags []map[string]any
