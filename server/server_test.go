@@ -49,6 +49,23 @@ func TestBuildQuery(t *testing.T) {
 		assert.Contains(t, q, "tags {")
 		assert.NotContains(t, q, "hardware {")
 	})
+
+	t.Run("nil fields includes all blocks", func(t *testing.T) {
+		q := buildQuery(nil)
+		for _, block := range allFieldBlocks {
+			frag := blockFragments[block]
+			// Extract the first token (the block name) from the fragment
+			firstSpace := 0
+			for i, c := range frag {
+				if c == ' ' || c == '{' {
+					firstSpace = i
+					break
+				}
+			}
+			blockName := frag[:firstSpace]
+			assert.Contains(t, q, blockName, "missing block %q", block)
+		}
+	})
 }
 
 func TestServer_List(t *testing.T) {

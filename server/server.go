@@ -180,10 +180,7 @@ func List(ctx context.Context, client api.Querier, opts ...Option) ([]Server, er
 		input["filter"] = filter
 	}
 
-	query := serversQuery
-	if len(options.Fields) > 0 {
-		query = buildQuery(options.Fields)
-	}
+	query := buildQuery(options.Fields)
 
 	for {
 		var data serversData
@@ -405,77 +402,6 @@ func buildQuery(fields []string) string {
 	}
 }`, strings.Join(fragments, "\n\t\t\t"))
 }
-
-const serversQuery = `query($input: PaginatedServersInput) {
-	servers(input: $input) {
-		entriesTotalCount
-		pageCount
-		isLastPage
-		entries {
-			name
-			alias
-			hostname
-			uptime
-			statusV2
-			powerStatus
-			location {
-				name
-				region
-			}
-			system {
-				operatingSystem {
-					name
-				}
-				raid
-			}
-			hardware {
-				cpus {
-					name
-					cores
-				}
-				storage {
-					size
-					type
-				}
-				rams {
-					size
-				}
-			}
-			network {
-				ipAddresses {
-					ip
-					isPrimary
-					type
-					isBgpPrefix
-				}
-				uplinkCapacity
-				hasBgp
-				hasLinkAggregation
-				ddosShieldLevel
-				ipmi {
-					ip
-					username
-				}
-			}
-			trafficPlan {
-				name
-				type
-				bandwidth
-			}
-		billing {
-			subscriptionItem {
-				price
-				currency
-				subscriptionItemDetail {
-					server {
-						name
-					}
-				}
-			}
-		}
-		deviceType
-	}
-}`
 
 func convertServers(items []node) []Server {
 	servers := make([]Server, len(items))
