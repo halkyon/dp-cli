@@ -323,34 +323,37 @@ type serversData struct {
 }
 
 // fieldBlocks maps each CLI output field to the top-level GraphQL block(s) it requires.
+// Keys must match the case-insensitive names accepted by getFieldValue.
 var fieldBlocks = map[string][]string{
-	"Name":            {"basic"},
-	"Alias":           {"basic"},
-	"Status":          {"basic"},
-	"Power":           {"basic"},
-	"Location":        {"location"},
-	"IP":              {"network"},
-	"IPType":          {"network"},
-	"AdditionalIPs":   {"network"},
-	"Hostname":        {"basic"},
-	"Uptime":          {"basic"},
-	"Price":           {"billing"},
-	"Currency":        {"billing"},
-	"BillingPeriod":   {"billing"},
-	"OperatingSystem": {"system"},
-	"CPU":             {"hardware"},
-	"Memory":          {"hardware"},
-	"Storage":         {"hardware"},
-	"Uplink":          {"network"},
-	"RAID":            {"system"},
-	"TrafficPlan":     {"trafficPlan"},
-	"IPMIURL":         {"network"},
-	"IPMIUser":        {"network"},
-	"BGP":             {"network"},
-	"DDOS":            {"network"},
-	"LinkAggregation": {"network"},
-	"Tags":            {"tags"},
-	"DeviceType":      {"basic"},
+	"name":            {"basic"},
+	"alias":           {"basic"},
+	"status":          {"basic"},
+	"power":           {"basic"},
+	"powerstatus":     {"basic"},
+	"location":        {"location"},
+	"ip":              {"network"},
+	"iptype":          {"network"},
+	"additionalips":   {"network"},
+	"hostname":        {"basic"},
+	"uptime":          {"basic"},
+	"price":           {"billing"},
+	"currency":        {"billing"},
+	"billingperiod":   {"billing"},
+	"os":              {"system"},
+	"operatingsystem": {"system"},
+	"cpu":             {"hardware"},
+	"memory":          {"hardware"},
+	"storage":         {"hardware"},
+	"uplink":          {"network"},
+	"raid":            {"system"},
+	"trafficplan":     {"trafficPlan"},
+	"ipmiurl":         {"network"},
+	"ipmiuser":        {"network"},
+	"bgp":             {"network"},
+	"ddos":            {"network"},
+	"linkaggregation": {"network"},
+	"tags":            {"tags"},
+	"devicetype":      {"basic"},
 }
 
 // allFieldBlocks lists every block in the order they should appear in the query.
@@ -372,7 +375,7 @@ var blockFragments = map[string]string{
 func buildQuery(fields []string) string {
 	blockSet := make(map[string]struct{})
 	for _, f := range fields {
-		blocks, ok := fieldBlocks[f]
+		blocks, ok := fieldBlocks[strings.ToLower(f)]
 		if !ok {
 			continue
 		}
