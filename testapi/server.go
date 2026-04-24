@@ -3,6 +3,7 @@ package testapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -44,7 +45,10 @@ func (s *Server) Addr() string {
 func (s *Server) Run(ctx context.Context) error {
 	var g errgroup.Group
 	g.Go(func() error {
-		return s.srv.Serve(s.ln)
+		if err := s.srv.Serve(s.ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			return err
+		}
+		return nil
 	})
 	g.Go(func() error {
 		<-ctx.Done()
