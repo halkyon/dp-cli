@@ -175,7 +175,6 @@ func TestConfig_Load(t *testing.T) {
 
 		cfgContent := `output = table
 api_url = https://test.example.com
-test_api = true
 aliases_cache = 2h
 locations_cache = 24h
 regions_cache = 48h

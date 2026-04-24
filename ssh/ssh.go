@@ -11,7 +11,7 @@ import (
 	"github.com/halkyon/dp/server"
 )
 
-func Run(ctx context.Context, servers []server.Server, username string, args []string, verbose bool) error {
+func Run(ctx context.Context, servers []server.Server, username string, args []string) error {
 	if len(args) < 1 {
 		return errors.New("usage: dp ssh <alias> [ssh flags...]")
 	}
@@ -21,9 +21,6 @@ func Run(ctx context.Context, servers []server.Server, username string, args []s
 		parts := strings.SplitN(alias, "@", 2)
 		username = parts[0]
 		alias = parts[1]
-		if verbose {
-			fmt.Fprintf(os.Stderr, "user from arg: %s\n", username)
-		}
 	}
 
 	var target *server.Server
@@ -42,21 +39,11 @@ func Run(ctx context.Context, servers []server.Server, username string, args []s
 		return fmt.Errorf("server %q has no IP address", alias)
 	}
 
-	if verbose {
-		fmt.Fprintf(os.Stderr, "OS: %s\n", target.OperatingSystem)
-	}
-
 	if username == "" {
 		username = defaultUsername(target.OperatingSystem)
-		if verbose {
-			fmt.Fprintf(os.Stderr, "default user from OS: %s\n", username)
-		}
 	}
 
 	sshArgs := append([]string{fmt.Sprintf("%s@%s", username, target.IP)}, args[1:]...)
-	if verbose {
-		fmt.Fprintf(os.Stderr, "running: ssh %s\n", strings.Join(sshArgs, " "))
-	}
 	sshCmd := exec.CommandContext(ctx, "ssh", sshArgs...)
 	sshCmd.Stdin = os.Stdin
 	sshCmd.Stdout = os.Stdout

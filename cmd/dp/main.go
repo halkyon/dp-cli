@@ -51,7 +51,6 @@ func (s *stringSlice) String() string {
 }
 
 func init() {
-	flag.Bool("verbose", false, "Print verbose information")
 	flag.StringVar(&outputFormatFlag, "o", "", "Output format (shorthand): json, table, csv, raw")
 	flag.StringVar(&outputFormatFlag, "output", "", "Output format: json, table, csv, raw")
 	flag.BoolVar(&outputWide, "ow", false, "Show more fields (shorthand)")
@@ -116,18 +115,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "  -t, --tag <val>       Filter by tag (repeatable)\n")
 		case "ssh":
 			fmt.Fprintf(os.Stderr, "Options for ssh:\n")
-			fmt.Fprintf(os.Stderr, "  -v, --verbose           Print verbose information\n")
 			fmt.Fprintf(os.Stderr, "  --user <name>           SSH user (default: root on linux, admin on windows)\n")
 		case "completion":
 			fmt.Fprintf(os.Stderr, "Options for completion:\n")
 			fmt.Fprintf(os.Stderr, "  (shell name required: bash, zsh, fish)\n")
-		case "aliases", "locations", "regions", "power", "status":
-			fmt.Fprintf(os.Stderr, "Options:\n")
-			fmt.Fprintf(os.Stderr, "  --test-api             Use test API server\n")
 		default:
-			fmt.Fprintf(os.Stderr, "Options:\n")
-			fmt.Fprintf(os.Stderr, "  --test-api             Use test API server\n")
-			fmt.Fprintf(os.Stderr, "  -v, --verbose          Print verbose information\n")
 		}
 	}
 
@@ -190,7 +182,6 @@ func run(cmd string, args []string, opts server.Options) error {
 		return err
 	}
 	wide := outputWide || flag.Lookup("output-wide").Value.String() == "true"
-	verbose := flag.Lookup("verbose").Value.String() == "true"
 	sshUser := ""
 	if len(*flagUser) > 0 {
 		sshUser = (*flagUser)[0]
@@ -223,7 +214,7 @@ func run(cmd string, args []string, opts server.Options) error {
 		if len(args) < 1 {
 			return errors.New("usage: dp ssh <alias> [ssh flags...]")
 		}
-		return runSSH(ctx, opts, sshUser, args, verbose, cfg)
+		return runSSH(ctx, opts, sshUser, args, cfg)
 	case "completion":
 		if len(args) < 1 {
 			return errors.New("usage: dp completion <bash|zsh|fish>")
@@ -555,7 +546,7 @@ func runShow(ctx context.Context, outputFormat string, outputWide bool, opts ser
 	return nil
 }
 
-func runSSH(ctx context.Context, opts server.Options, sshUser string, args []string, verbose bool, cfg *config.Config) error {
+func runSSH(ctx context.Context, opts server.Options, sshUser string, args []string, cfg *config.Config) error {
 	client, err := getClient(cfg)
 	if err != nil {
 		return err
@@ -578,7 +569,7 @@ func runSSH(ctx context.Context, opts server.Options, sshUser string, args []str
 		return err
 	}
 
-	return ssh.Run(ctx, servers, sshUser, args, verbose)
+	return ssh.Run(ctx, servers, sshUser, args)
 }
 
 func runFilter(ctx context.Context, filterType string, cfg *config.Config) error {

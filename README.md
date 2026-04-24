@@ -126,9 +126,6 @@ dp ssh my-server
 # SSH as different user
 dp ssh root@my-server
 
-# SSH with verbose output (flags passed to ssh)
-dp ssh my-server -v
-
 # SSH with specific user
 dp ssh --user=admin my-server
 ```
@@ -141,12 +138,6 @@ Generate shell completion script.
 dp completion bash > /etc/bash_completion.d/dp
 dp completion zsh > ~/.zsh/completions/_dp
 dp completion fish > ~/.config/fish/completions/dp.fish
-```
-
-## Global Options
-
-```bash
--v, --verbose          Print verbose information
 ```
 
 ## Shell completion setup

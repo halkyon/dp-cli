@@ -18,13 +18,13 @@ func TestRun(t *testing.T) {
 	}
 
 	t.Run("No server found", func(t *testing.T) {
-		assert.ErrorContains(t, Run(t.Context(), servers, "user", []string{"ls"}, false), "no server found")
+		assert.ErrorContains(t, Run(t.Context(), servers, "user", []string{"ls"}), "no server found")
 	})
 
 	t.Run("Server has no IP", func(t *testing.T) {
 		serversNoIP := []server.Server{
 			{Name: "ServerNoIP", Alias: "SNoIP", IP: ""},
 		}
-		assert.ErrorContains(t, Run(t.Context(), serversNoIP, "user", []string{"SNoIP", "ls"}, false), "has no IP address")
+		assert.ErrorContains(t, Run(t.Context(), serversNoIP, "user", []string{"SNoIP", "ls"}), "has no IP address")
 	})
 }
