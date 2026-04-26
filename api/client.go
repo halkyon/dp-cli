@@ -13,9 +13,11 @@ import (
 )
 
 var (
-	ErrMissingAPIKey   = errors.New("DATAPACKET_API_KEY environment variable is not set")
+	ErrMissingAPIKey   = errors.New("API key is required; set DATAPACKET_API_KEY or api_key in ~/.config/dp/credentials")
 	ErrGraphQLResponse = errors.New("GraphQL errors")
 )
+
+const maxResponseSize = 10 * 1024 * 1024 // 10 MB
 
 type Client struct {
 	httpClient *http.Client
@@ -66,13 +68,18 @@ func (c *Client) Query(ctx context.Context, query string, variables map[string]a
 	}
 	defer resp.Body.Close() //nolint:errcheck // standard defer pattern
 
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize))
 	if err != nil {
 		return fmt.Errorf("reading response body: %w", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		// Truncate very large error bodies to avoid flooding terminals
+		msg := string(body)
+		if len(msg) > 1024 {
+			msg = msg[:1024] + "... (truncated)"
+		}
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, msg)
 	}
 
 	var gqlResp struct {
