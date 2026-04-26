@@ -2,19 +2,25 @@ package filters
 
 import (
 	"context"
+	"time"
 
 	"github.com/halkyon/dp/api"
 )
 
 type Locations struct {
-	client api.Querier
+	client        api.Querier
+	cacheDuration time.Duration
 }
 
-func NewLocations(client api.Querier) *Locations {
+func NewLocations(client api.Querier, cacheDuration time.Duration) *Locations {
 	return &Locations{
-		client: client,
+		client:        client,
+		cacheDuration: cacheDuration,
 	}
 }
+
+func (l *Locations) CacheDuration() time.Duration { return l.cacheDuration }
+func (l *Locations) CacheKey() string             { return "locations" }
 
 type locationNode struct {
 	Name   string `json:"name"`

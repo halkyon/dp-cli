@@ -3,19 +3,25 @@ package filters
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/halkyon/dp/api"
 )
 
 type Regions struct {
-	client api.Querier
+	client        api.Querier
+	cacheDuration time.Duration
 }
 
-func NewRegions(client api.Querier) *Regions {
+func NewRegions(client api.Querier, cacheDuration time.Duration) *Regions {
 	return &Regions{
-		client: client,
+		client:        client,
+		cacheDuration: cacheDuration,
 	}
 }
+
+func (r *Regions) CacheDuration() time.Duration { return r.cacheDuration }
+func (r *Regions) CacheKey() string             { return "regions" }
 
 func (r *Regions) Get(ctx context.Context) ([]string, error) {
 	var data locationsData

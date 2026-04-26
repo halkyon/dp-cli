@@ -2,19 +2,26 @@ package filters
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/halkyon/dp/api"
 )
 
 type Aliases struct {
-	client api.Querier
+	client        api.Querier
+	cacheDuration time.Duration
 }
 
-func NewAliases(client api.Querier) *Aliases {
+func NewAliases(client api.Querier, cacheDuration time.Duration) *Aliases {
 	return &Aliases{
-		client: client,
+		client:        client,
+		cacheDuration: cacheDuration,
 	}
 }
+
+func (a *Aliases) CacheDuration() time.Duration { return a.cacheDuration }
+func (a *Aliases) CacheKey() string             { return "aliases" }
 
 type serverAliasNode struct {
 	Alias string `json:"alias"`
@@ -35,6 +42,8 @@ const serverAliasesQuery = `query($input: PaginatedServersInput) {
 		}
 	}
 }`
+
+const maxAliasPages = 1000
 
 func (a *Aliases) Get(ctx context.Context) ([]string, error) {
 	var aliases []string
@@ -66,6 +75,9 @@ func (a *Aliases) Get(ctx context.Context) ([]string, error) {
 		}
 
 		pageIndex++
+		if pageIndex > maxAliasPages {
+			return nil, fmt.Errorf("alias pagination exceeded maximum of %d pages", maxAliasPages)
+		}
 		input["pageIndex"] = pageIndex
 	}
 

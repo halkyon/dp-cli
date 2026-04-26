@@ -2,6 +2,7 @@ package filters
 
 import (
 	"context"
+	"time"
 )
 
 var serverStatuses = []string{"WAITING", "PROVISIONING", "MAINTENANCE", "UNREACHABLE", "ACTIVE"}
@@ -15,3 +16,6 @@ func NewStatus() *Status {
 func (*Status) Get(ctx context.Context) ([]string, error) {
 	return serverStatuses, nil
 }
+
+func (*Status) CacheDuration() time.Duration { return 0 }
+func (*Status) CacheKey() string             { return "status" }

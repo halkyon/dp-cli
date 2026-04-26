@@ -11,7 +11,7 @@ import (
 func TestLocations_Get(t *testing.T) {
 	var mq testapi.MockQuerier
 
-	locations := NewLocations(&mq)
+	locations := NewLocations(&mq, 0)
 
 	result, err := locations.Get(t.Context())
 	require.NoError(t, err)
@@ -21,7 +21,7 @@ func TestLocations_Get(t *testing.T) {
 func TestRegions_Get(t *testing.T) {
 	var mq testapi.MockQuerier
 
-	regions := NewRegions(&mq)
+	regions := NewRegions(&mq, 0)
 
 	result, err := regions.Get(t.Context())
 	require.NoError(t, err)
