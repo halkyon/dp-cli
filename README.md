@@ -130,16 +130,6 @@ dp ssh root@my-server
 dp ssh --user=admin my-server
 ```
 
-### completion
-
-Generate shell completion script.
-
-```bash
-dp completion bash > /etc/bash_completion.d/dp
-dp completion zsh > ~/.zsh/completions/_dp
-dp completion fish > ~/.config/fish/completions/dp.fish
-```
-
 ## Shell completion setup
 
 After sourcing the completion script (see below), tab completion will work for:
