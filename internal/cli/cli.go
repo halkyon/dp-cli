@@ -1,4 +1,4 @@
-package app
+package cli
 
 import (
 	"context"
@@ -45,36 +45,17 @@ func GetVersion() string {
 	return fmt.Sprintf("%s (%s)", version, revision)
 }
 
-type App struct {
+type CLI struct {
 	cfg    *config.Config
 	client api.Querier
 }
 
-func New(cfg *config.Config) (*App, error) {
-	client, err := getClient(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &App{cfg: cfg, client: client}, nil
+func New(cfg *config.Config, client api.Querier) *CLI {
+	return &CLI{cfg: cfg, client: client}
 }
 
-func getClient(cfg *config.Config) (api.Querier, error) {
-	apiKey := cfg.APIKey
-	if apiKey == "" {
-		return nil, api.ErrMissingAPIKey
-	}
-	client, err := api.NewClient(apiKey)
-	if err != nil {
-		return nil, err
-	}
-	if cfg.APIURL != "" {
-		client.SetBaseURL(cfg.APIURL)
-	}
-	return client, nil
-}
-
-func (a *App) ShowServers(ctx context.Context, opts server.Options, outputFormat string, wide bool) error {
-	servers, err := server.List(ctx, a.client, opts.ToOpts()...)
+func (c *CLI) ShowServers(ctx context.Context, opts server.Options, outputFormat string, wide bool) error {
+	servers, err := server.List(ctx, c.client, opts.ToOpts()...)
 	if err != nil {
 		return err
 	}
@@ -100,7 +81,7 @@ func (a *App) ShowServers(ctx context.Context, opts server.Options, outputFormat
 	return nil
 }
 
-func (a *App) SSH(ctx context.Context, opts server.Options, sshUser string, args []string) error {
+func (c *CLI) SSH(ctx context.Context, opts server.Options, sshUser string, args []string) error {
 	if len(args) < 1 {
 		return errors.New("usage: dp ssh <alias> [ssh flags...]")
 	}
@@ -115,7 +96,7 @@ func (a *App) SSH(ctx context.Context, opts server.Options, sshUser string, args
 
 	opts.Fields = []string{"Name", "Alias", "IP", "OperatingSystem"}
 
-	servers, err := server.List(ctx, a.client, opts.ToOpts()...)
+	servers, err := server.List(ctx, c.client, opts.ToOpts()...)
 	if err != nil {
 		return err
 	}
@@ -123,22 +104,22 @@ func (a *App) SSH(ctx context.Context, opts server.Options, sshUser string, args
 	return ssh.Run(ctx, servers, sshUser, args)
 }
 
-func (a *App) Completion(shell string) error {
+func GenerateCompletion(shell string) error {
 	return completion.Generate(completion.Shell(shell))
 }
 
-func (a *App) Filter(ctx context.Context, filterType string) error {
+func (c *CLI) Filter(ctx context.Context, filterType string) error {
 	var filter interface {
 		Get(context.Context) ([]string, error)
 	}
 
 	switch filterType {
 	case "aliases":
-		filter = filters.NewAliases(a.client, a.cfg.AliasesCache)
+		filter = filters.NewAliases(c.client, c.cfg.AliasesCache)
 	case "locations":
-		filter = filters.NewLocations(a.client, a.cfg.LocationsCache)
+		filter = filters.NewLocations(c.client, c.cfg.LocationsCache)
 	case "regions":
-		filter = filters.NewRegions(a.client, a.cfg.RegionsCache)
+		filter = filters.NewRegions(c.client, c.cfg.RegionsCache)
 	case "power":
 		filter = filters.NewPower()
 	case "status":
@@ -177,7 +158,7 @@ func (a *App) Filter(ctx context.Context, filterType string) error {
 	return nil
 }
 
-func (a *App) Fields() {
+func Fields() {
 	for _, f := range output.QueryableFields {
 		fmt.Println(f)
 	}

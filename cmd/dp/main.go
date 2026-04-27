@@ -9,10 +9,9 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/halkyon/dp/completion"
+	"github.com/halkyon/dp/api"
 	"github.com/halkyon/dp/config"
-	"github.com/halkyon/dp/internal/app"
-	"github.com/halkyon/dp/internal/output"
+	"github.com/halkyon/dp/internal/cli"
 	"github.com/halkyon/dp/server"
 )
 
@@ -44,12 +43,12 @@ func (s *stringSlice) String() string {
 
 func init() {
 	flag.BoolFunc("V", "Print version and exit", func(string) error {
-		fmt.Println(app.GetVersion())
+		fmt.Println(cli.GetVersion())
 		os.Exit(0)
 		return nil
 	})
 	flag.BoolFunc("version", "Print version and exit", func(string) error {
-		fmt.Println(app.GetVersion())
+		fmt.Println(cli.GetVersion())
 		os.Exit(0)
 		return nil
 	})
@@ -186,23 +185,29 @@ func run(cmd string, args []string, opts server.Options) error {
 	// Commands that don't need config or API client
 	switch cmd {
 	case "version":
-		fmt.Println(app.GetVersion())
+		fmt.Println(cli.GetVersion())
 		return nil
 	case "fields":
-		for _, f := range output.QueryableFields {
-			fmt.Println(f)
-		}
+		cli.Fields()
 		return nil
 	case "completion":
 		if len(args) < 1 {
 			return errors.New("usage: dp completion <bash|zsh|fish>")
 		}
-		return completion.Generate(completion.Shell(args[0]))
+		return cli.GenerateCompletion(args[0])
 	}
 
 	cfg, err := config.Load()
 	if err != nil {
 		return err
+	}
+
+	client, err := api.NewClient(cfg.APIKey)
+	if err != nil {
+		return err
+	}
+	if cfg.APIURL != "" {
+		client.SetBaseURL(cfg.APIURL)
 	}
 
 	wide := outputWide || flag.Lookup("output-wide").Value.String() == "true"
@@ -222,10 +227,7 @@ func run(cmd string, args []string, opts server.Options) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	a, err := app.New(cfg)
-	if err != nil {
-		return err
-	}
+	c := cli.New(cfg, client)
 
 	switch cmd {
 	case "servers":
@@ -238,22 +240,22 @@ func run(cmd string, args []string, opts server.Options) error {
 				opts.Fields = []string{"Name", "Alias", "Status", "Location", "IP"}
 			}
 		}
-		return a.ShowServers(ctx, opts, output, wide)
+		return c.ShowServers(ctx, opts, output, wide)
 	case "ssh":
 		if len(args) < 1 {
 			return errors.New("usage: dp ssh <alias> [ssh flags...]")
 		}
-		return a.SSH(ctx, opts, sshUser, args)
+		return c.SSH(ctx, opts, sshUser, args)
 	case "aliases":
-		return a.Filter(ctx, "aliases")
+		return c.Filter(ctx, "aliases")
 	case "locations":
-		return a.Filter(ctx, "locations")
+		return c.Filter(ctx, "locations")
 	case "regions":
-		return a.Filter(ctx, "regions")
+		return c.Filter(ctx, "regions")
 	case "power":
-		return a.Filter(ctx, "power")
+		return c.Filter(ctx, "power")
 	case "status":
-		return a.Filter(ctx, "status")
+		return c.Filter(ctx, "status")
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
