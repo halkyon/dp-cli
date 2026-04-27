@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/halkyon/dp/api"
 	"github.com/halkyon/dp/cache"
@@ -131,8 +132,13 @@ func (c *CLI) Filter(ctx context.Context, filterType string) error {
 	var list []string
 	var err error
 
-	if cachable, ok := filter.(filters.Cacheable); ok && cachable.CacheDuration() > 0 {
-		c, err := cache.New[[]string](cachable.CacheKey(), cachable.CacheDuration(), "")
+	type cacheable interface {
+		CacheDuration() time.Duration
+		CacheKey() string
+	}
+
+	if ca, ok := filter.(cacheable); ok && ca.CacheDuration() > 0 {
+		c, err := cache.New[[]string](ca.CacheKey(), ca.CacheDuration(), "")
 		if err != nil {
 			return err
 		}
