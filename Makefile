@@ -7,7 +7,7 @@ GIT_TAG := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "")
 ifeq ($(GIT_TAG),)
 	LDFLAGS := -s -w
 else
-	LDFLAGS := -s -w -X=main.version=$(GIT_TAG)
+	LDFLAGS := -s -w -X=github.com/halkyon/dp/internal/cli.version=$(GIT_TAG)
 endif
 
 clean:
