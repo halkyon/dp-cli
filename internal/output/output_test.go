@@ -151,3 +151,38 @@ func TestJSONMarshaling(t *testing.T) {
 		assert.NotContains(t, string(encoded), `"Alias"`)
 	})
 }
+
+func TestPrintRaw(t *testing.T) {
+	servers := []server.Server{
+		{
+			Name:  "DP-12345",
+			Alias: "prod-web",
+			IP:    "1.2.3.4",
+		},
+		{
+			Name:  "DP-67890",
+			Alias: "staging-db",
+			IP:    "5.6.7.8",
+		},
+	}
+
+	t.Run("Single field", func(t *testing.T) {
+		got := PrintRaw(servers, []string{"Name"})
+		assert.Equal(t, "DP-12345\nDP-67890\n", got)
+	})
+
+	t.Run("Multiple fields", func(t *testing.T) {
+		got := PrintRaw(servers, []string{"Name", "Alias"})
+		assert.Equal(t, "DP-12345 prod-web\nDP-67890 staging-db\n", got)
+	})
+
+	t.Run("Defaults to Name when no fields", func(t *testing.T) {
+		got := PrintRaw(servers, nil)
+		assert.Equal(t, "DP-12345\nDP-67890\n", got)
+	})
+
+	t.Run("Empty servers", func(t *testing.T) {
+		got := PrintRaw([]server.Server{}, []string{"Name"})
+		assert.Empty(t, got)
+	})
+}

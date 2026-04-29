@@ -239,3 +239,23 @@ func PrintJSON(servers []server.Server, queryFields []string) ([]byte, error) {
 	}
 	return encoded, nil
 }
+
+func PrintRaw(servers []server.Server, queryFields []string) string {
+	if len(servers) == 0 {
+		return ""
+	}
+	fields := queryFields
+	if len(fields) == 0 {
+		fields = []string{"Name"}
+	}
+	var b strings.Builder
+	for _, s := range servers {
+		vals := make([]string, len(fields))
+		for i, f := range fields {
+			vals[i] = getFieldValue(s, f)
+		}
+		b.WriteString(strings.Join(vals, " "))
+		b.WriteString("\n")
+	}
+	return b.String()
+}

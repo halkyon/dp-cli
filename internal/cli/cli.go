@@ -75,6 +75,8 @@ func (c *CLI) ShowServers(ctx context.Context, opts server.Options, outputFormat
 		if err := output.PrintCSV(w, servers, wide, opts.Fields); err != nil {
 			return fmt.Errorf("writing CSV: %w", err)
 		}
+	case "raw":
+		fmt.Print(output.PrintRaw(servers, opts.Fields))
 	default:
 		return fmt.Errorf("unknown output format: %s (use json, table, or csv)", outputFormat)
 	}
